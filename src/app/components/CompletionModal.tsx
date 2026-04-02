@@ -67,7 +67,7 @@ export function CompletionModal({ isOpen, onClose, unitNumber, unitTitle, xpEarn
 
         {/* Title */}
         <h2 className="text-3xl mb-2" style={{ color: 'var(--black-500)' }}>
-          Congratulations! 🎉
+          Congratulations!
         </h2>
         <p className="text-lg mb-6" style={{ color: 'var(--black-400)' }}>
           You completed Unit {unitNumber}: {unitTitle}

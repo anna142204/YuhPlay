@@ -104,7 +104,7 @@ export function PortfolioCard({ change, hasData, history }: PortfolioCardProps) 
         </div>
       ) : (
         <div className="text-center py-8">
-          <p className="text-sm" style={{ color: 'var(--black-200)' }}>AUCUNE DONNÉE</p>
+          <p className="text-sm" style={{ color: 'var(--black-200)' }}>NO DATA</p>
         </div>
       )}
     </div>
@@ -117,13 +117,24 @@ interface MascotProps {
 
 export function Mascot({ message }: MascotProps) {
   return (
-    <div className="flex items-end gap-3">
-      <div className="rounded-2xl rounded-bl-none p-4 max-w-[200px]" style={{ backgroundColor: 'var(--light-purple-300)', border: '2px solid var(--light-purple-400)' }}>
-        <p className="text-sm" style={{ color: 'var(--black-500)' }}>
+    <div className="relative h-[210px] w-full max-w-[290px] overflow-visible">
+      <div
+        className="absolute left-10 top-0 max-w-[210px] rounded-[28px] rounded-br-md px-4 py-4"
+        style={{
+          background: 'linear-gradient(180deg, var(--light-purple-200) 0%, var(--light-purple-300) 100%)',
+          border: '2px solid var(--light-purple-400)',
+        }}
+      >
+        <p className="text-sm leading-relaxed" style={{ color: 'var(--black-500)' }}>
           {message}
         </p>
       </div>
-      <img src={mascotImg} alt="Mascot" className="w-16 h-16 mb-[-10px]" />
+
+      <img
+        src={mascotImg}
+        alt="Mascot"
+        className="absolute bottom-0 right-[-50px] h-50 w-50 select-none"
+      />
     </div>
   );
 }

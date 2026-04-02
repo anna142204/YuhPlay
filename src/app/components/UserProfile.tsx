@@ -20,7 +20,7 @@ export function UserProfile({ xp, streak }: UserProfileProps) {
       
       {/* User Info */}
       <div className="text-center">
-        <h2 style={{ color: 'var(--black-500)' }}>Léo D.</h2>
+        <h2 style={{ color: 'var(--black-500)' }}>Leo D.</h2>
         <p className="text-sm" style={{ color: 'var(--black-300)' }}>Level {level} · Beginner</p>
       </div>
       

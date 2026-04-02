@@ -1,4 +1,4 @@
-import { MoveDownRight, Shield, Sprout, Star } from "lucide-react";
+import { MoveDownRight, Shield, Sprout, Star, Lock} from "lucide-react";
 import TreasureChest from "../../imports/Group5/Group5";
 
 interface UnitProgress {
@@ -68,22 +68,22 @@ export function LearningPath({ onUnitClick, onChestClick, unitsProgress }: Learn
   };
 
   const rows = [
-    { top: 3.53, side: "left", textWidth: 30.0, gap: 3.5 },
-    { top: 21.08, side: "right", textWidth: 30.0, gap: 3.5 },
-    { top: 38.62, side: "left", textWidth: 40.0, gap: 3.5 },
-    { top: 56.24, side: "right", textWidth: 40.0, gap: 3.5 },
+    { top: 2.8, side: "left", textWidth: 30.0, gap: 3.5 },
+    { top: 18.1, side: "right", textWidth: 30.0, gap: 3.5 },
+    { top: 33.4, side: "left", textWidth: 40.0, gap: 3.5 },
+    { top: 48.8, side: "right", textWidth: 40.0, gap: 3.5 },
   ] as const;
 
   const highlightedSegments = [
-    { fromUnit: 1, start: 7, end: 30 },
-    { fromUnit: 2, start: 30, end: 56 },
+    { fromUnit: 1, start: 7, end: 28 },
+    { fromUnit: 2, start: 30, end: 50 },
     { fromUnit: 3, start: 56, end: 80 },
     { fromUnit: 4, start: 80, end: 97 },
   ] as const;
 
   return (
-    <div className="px-4 py-6">
-      <div className="relative mx-auto w-full max-w-[640px] aspect-[723/1254]">
+    <div className="px-4 py-2">
+      <div className="relative mx-auto w-full max-w-[580px] aspect-[723/1254]">
       {/* SVG Path from Figma node 6:4 */}
       <svg
         className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
@@ -92,9 +92,9 @@ export function LearningPath({ onUnitClick, onChestClick, unitsProgress }: Learn
         viewBox="0 0 220.499 955.985"
         preserveAspectRatio="none"
         style={{
-          top: "5.61%",
+          top: "4.8%",
           width: "25.93%",
-          height: "73.44%",
+          height: "68.5%",
         }}
       >
         <defs>
@@ -102,18 +102,14 @@ export function LearningPath({ onUnitClick, onChestClick, unitsProgress }: Learn
             <stop offset="0%" style={{ stopColor: '#C9E8F5', stopOpacity: 1 }} />
             <stop offset="100%" style={{ stopColor: '#CCB1DA', stopOpacity: 1 }} />
           </linearGradient>
-          <filter id="pathShadow" x="-50%" y="-50%" width="200%" height="200%">
-            <feDropShadow dx="1" dy="3" stdDeviation="0" floodOpacity="0.25" />
-          </filter>
         </defs>
         <path
           d={pathShape}
           fill="none"
           stroke="url(#pathGradient)"
-          strokeWidth="32"
+          strokeWidth="28"
           strokeLinecap="round"
           strokeLinejoin="round"
-          filter="url(#pathShadow)"
         />
 
         {highlightedSegments.map((segment) => {
@@ -130,7 +126,7 @@ export function LearningPath({ onUnitClick, onChestClick, unitsProgress }: Learn
               d={pathShape}
               fill="none"
               stroke="var(--orange-400)"
-              strokeWidth="32"
+              strokeWidth="28"
               strokeLinecap="round"
               strokeLinejoin="round"
               pathLength={100}
@@ -160,22 +156,22 @@ export function LearningPath({ onUnitClick, onChestClick, unitsProgress }: Learn
                 style={
                   row.side === "left"
                     ? {
-                        top: `calc(${row.top}% + 5%)`,
+                        top: `calc(${row.top}% + 4.4%)`,
                         right: `calc(50% + 8.30% + ${row.gap}%)`,
                         width: `${row.textWidth}%`,
                         transform: 'translateY(-50%)',
                       }
                     : {
-                        top: `calc(${row.top}% + 5%)`,
+                        top: `calc(${row.top}% + 4.4%)`,
                         left: `calc(50% + 8.30% + ${row.gap}%)`,
                         width: `${row.textWidth}%`,
                         transform: 'translateY(-50%)',
                       }
                 }
               >
-                <p className="mb-0.5 text-[clamp(11px,1.4vw,14px)] leading-tight" style={{ color: 'var(--black-300)' }}>{unit.title}</p>
-                <h3 className="mb-0.5 text-[clamp(18px,2.2vw,24px)] leading-tight" style={{ color: 'var(--black-500)' }}>{unit.subtitle}</h3>
-                <p className="text-[clamp(11px,1.4vw,14px)] leading-tight" style={{ color: 'var(--black-300)' }}>
+                <p className="mb-0.5 text-[clamp(10px,1.25vw,13px)] leading-tight" style={{ color: 'var(--black-300)' }}>{unit.title}</p>
+                <h3 className="mb-0.5 text-[clamp(16px,2vw,21px)] leading-tight" style={{ color: 'var(--black-500)' }}>{unit.subtitle}</h3>
+                <p className="text-[clamp(10px,1.25vw,13px)] leading-tight" style={{ color: 'var(--black-300)' }}>
                   {unit.lessons} lessons {completed && '· Completed ✓'}
                 </p>
               </div>
@@ -189,14 +185,14 @@ export function LearningPath({ onUnitClick, onChestClick, unitsProgress }: Learn
                 }`}
                 style={{ 
                   top: `${row.top}%`,
-                  width: '16.60%',
+                  width: '15.4%',
                   aspectRatio: '1 / 1',
                   backgroundColor: '#dfe6ea',
                   border: `4px solid ${borderColor}`,
                 }}
               >
                 {!unlocked ? (
-                  <span className="text-[clamp(24px,4vw,40px)]">🔒</span>
+                  <span className="text-[clamp(20px,3.4vw,34px)]"><Lock color="var(--black-300)"/></span>
                 ) : completed ? (
                   <>
                     {unit.icon}
@@ -221,7 +217,7 @@ export function LearningPath({ onUnitClick, onChestClick, unitsProgress }: Learn
         type="button"
         onClick={onChestClick}
         className="absolute left-1/2 -translate-x-1/2 z-10 w-[17.36%] aspect-square hover:scale-110 transition-transform cursor-pointer"
-        style={{ top: '74.51%' }}
+        style={{ top: '65%' }}
       >
         <TreasureChest />
       </button>

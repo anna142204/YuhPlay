@@ -26,6 +26,8 @@ interface Holding {
 }
 
 export default function App() {
+  const PORTFOLIO_SAMPLE_INTERVAL_MS = 10000;
+
   const [balance, setBalance] = useState(10000);
   const [xp, setXp] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -61,6 +63,7 @@ export default function App() {
   const lastActionAtRef = useRef(Date.now());
   const lastNudgeAtRef = useRef(0);
   const lastMarketWarningAtRef = useRef(0);
+  const lastPortfolioSampleAtRef = useRef(0);
 
   const unitTitles: Record<number, string> = {
     1: "First steps",
@@ -120,6 +123,12 @@ export default function App() {
       return;
     }
 
+    const now = Date.now();
+    if (now - lastPortfolioSampleAtRef.current < PORTFOLIO_SAMPLE_INTERVAL_MS) {
+      return;
+    }
+    lastPortfolioSampleAtRef.current = now;
+
     setPortfolioHistory((previous) => {
       const next = [...previous, portfolioValue].slice(-20);
       if (next.length >= 2) {
@@ -139,7 +148,7 @@ export default function App() {
     const interval = setInterval(() => {
       const now = Date.now();
       if (now - lastActionAtRef.current > 25000 && now - lastNudgeAtRef.current > 22000) {
-        setMascotMessage("Psst, clique sur INVEST pour passer a l'action.");
+        setMascotMessage("Psst, click INVEST to continue your progress.");
         lastNudgeAtRef.current = now;
       }
     }, 4000);
@@ -164,7 +173,7 @@ export default function App() {
     });
 
     if (majorDrop) {
-      setMascotMessage("Le marche baisse: respire. La volatilite est normale sur le long terme.");
+      setMascotMessage("The market is down: breathe. Volatility is normal over the long term.");
       lastMarketWarningAtRef.current = now;
     }
   }, [marketPrices, holdings, hasPortfolioData]);
@@ -414,7 +423,7 @@ export default function App() {
         setHasInvestedInLesson(true);
       }
 
-      setMascotMessage(`Achat reussi: ${asset.name}. Bien joue.`);
+      setMascotMessage(`Buy executed: ${asset.name}. Well done.`);
     }
 
     if (action === "sell") {
@@ -446,9 +455,9 @@ export default function App() {
       });
 
       if (unitPrice < currentHolding.averagePrice) {
-        setMascotMessage("Tu as vendu a perte. En phase volatile, patience et plan long terme aident souvent.");
+        setMascotMessage("You sold at a loss. In volatile phases, patience and a long-term plan often help.");
       } else {
-        setMascotMessage(`Vente executee sur ${asset.name}. Bonne discipline.`);
+        setMascotMessage(`Sell executed on ${asset.name}. Great discipline.`);
       }
     }
 
@@ -529,7 +538,7 @@ export default function App() {
         <PortfolioCard change={portfolioChange} hasData={hasPortfolioData} history={portfolioHistory} />
 
         {/* Mascot */}
-        <div className="mt-auto">
+        <div className="mt-2">
           <Mascot message={getMascotMessage()} />
         </div>
       </div>

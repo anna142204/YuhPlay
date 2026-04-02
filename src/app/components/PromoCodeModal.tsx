@@ -38,10 +38,10 @@ export function PromoCodeModal({ isOpen, onClose }: PromoCodeModalProps) {
 
         {/* Title */}
         <h2 className="text-2xl text-center mb-2" style={{ color: 'var(--black-500)' }}>
-          Félicitations ! 🎉
+          Congratulations! 🎉
         </h2>
         <p className="text-center mb-6" style={{ color: 'var(--black-400)' }}>
-          Vous avez débloqué votre récompense exclusive
+          You unlocked your exclusive reward
         </p>
 
         {/* Promo Details */}
@@ -54,13 +54,13 @@ export function PromoCodeModal({ isOpen, onClose }: PromoCodeModalProps) {
         >
           <div className="text-center mb-4">
             <p className="text-sm mb-2" style={{ color: 'var(--black-400)' }}>
-              Recevez
+              Receive
             </p>
             <p className="text-4xl font-bold" style={{ color: 'var(--purple-500)' }}>
               50 CHF
             </p>
             <p className="text-sm mt-2" style={{ color: 'var(--black-400)' }}>
-              à l'ouverture de votre compte Yuh
+              when opening your Yuh account
             </p>
           </div>
 
@@ -104,10 +104,10 @@ export function PromoCodeModal({ isOpen, onClose }: PromoCodeModalProps) {
             </div>
             <div>
               <p className="font-semibold text-sm" style={{ color: 'var(--black-500)' }}>
-                Téléchargez l'app Yuh
+                Download the Yuh app
               </p>
               <p className="text-xs" style={{ color: 'var(--black-400)' }}>
-                Disponible sur iOS et Android
+                Available on iOS and Android
               </p>
             </div>
           </div>
@@ -121,10 +121,10 @@ export function PromoCodeModal({ isOpen, onClose }: PromoCodeModalProps) {
             </div>
             <div>
               <p className="font-semibold text-sm" style={{ color: 'var(--black-500)' }}>
-                Créez votre compte
+                Create your account
               </p>
               <p className="text-xs" style={{ color: 'var(--black-400)' }}>
-                Entrez le code promo lors de l'inscription
+                Enter the promo code during signup
               </p>
             </div>
           </div>
@@ -138,10 +138,10 @@ export function PromoCodeModal({ isOpen, onClose }: PromoCodeModalProps) {
             </div>
             <div>
               <p className="font-semibold text-sm" style={{ color: 'var(--black-500)' }}>
-                Recevez 50 CHF
+                Get 50 CHF
               </p>
               <p className="text-xs" style={{ color: 'var(--black-400)' }}>
-                Créditée directement sur votre compte
+                Credited directly to your account
               </p>
             </div>
           </div>
@@ -156,12 +156,12 @@ export function PromoCodeModal({ isOpen, onClose }: PromoCodeModalProps) {
             color: 'white',
           }}
         >
-          C'est noté !
+          Got it!
         </button>
 
         {/* Terms */}
         <p className="text-xs text-center mt-4" style={{ color: 'var(--black-300)' }}>
-          Offre valable pour les nouveaux comptes uniquement. Conditions générales applicables.
+          Offer valid for new accounts only. Terms and conditions apply.
         </p>
       </div>
     </div>
