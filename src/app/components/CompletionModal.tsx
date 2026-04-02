@@ -23,7 +23,7 @@ export function CompletionModal({ isOpen, onClose, unitNumber, unitTitle, xpEarn
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6">
       {/* Confetti Animation */}
       {showConfetti && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -49,10 +49,10 @@ export function CompletionModal({ isOpen, onClose, unitNumber, unitTitle, xpEarn
         </div>
       )}
 
-      <div className="relative w-full max-w-md mx-4 bg-white rounded-2xl shadow-2xl p-8 text-center">
+      <div className="relative w-full max-w-[540px] bg-white rounded-2xl shadow-2xl p-8 text-center">
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          className="absolute top-5 right-5 p-2 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <X className="w-5 h-5" style={{ color: 'var(--black-400)' }} />
         </button>

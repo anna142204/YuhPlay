@@ -144,8 +144,8 @@ export function LessonModal({
   const canProceed = !content.requiresInvestAction || hasInvested;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-start bg-black/30 pointer-events-none">
-      <div className="pointer-events-auto w-full max-w-2xl ml-8 mr-[340px] bg-white rounded-2xl shadow-2xl p-8">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4 sm:p-6 pointer-events-none">
+      <div className="pointer-events-auto relative w-full max-w-[720px] bg-white rounded-2xl shadow-2xl p-8 -translate-x-8">
         <button
           onClick={onClose}
           className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-lg transition-colors"

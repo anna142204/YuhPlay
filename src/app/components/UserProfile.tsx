@@ -1,5 +1,5 @@
 import { Progress } from "./ui/progress";
-import { Flame } from "lucide-react";
+import { Flame, User } from "lucide-react";
 
 interface UserProfileProps {
   xp: number;
@@ -15,7 +15,7 @@ export function UserProfile({ xp, streak }: UserProfileProps) {
     <div className="flex flex-col items-center gap-4 p-6">
       {/* Avatar */}
       <div className="w-24 h-24 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-md" style={{ background: 'linear-gradient(135deg, var(--light-blue-300), var(--light-blue-400))' }}>
-        <div className="text-4xl">👨‍💼</div>
+        <div><User size={50} color="purple"/></div>
       </div>
       
       {/* User Info */}
@@ -30,7 +30,7 @@ export function UserProfile({ xp, streak }: UserProfileProps) {
           <span style={{ color: 'var(--black-400)' }}>XP progress</span>
           <span style={{ color: 'var(--black-400)' }}>{currentXp}/{maxXp}</span>
         </div>
-        <Progress value={(currentXp / maxXp) * 100} className="h-2" />
+        <Progress value={(currentXp / maxXp) * 100} className="h-2"/>
       </div>
       
       {/* Streak */}

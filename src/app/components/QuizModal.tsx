@@ -22,6 +22,8 @@ interface QuizModalProps {
   unitNumber: number;
 }
 
+const MAX_LIVES = 3;
+
 const quizQuestions: Record<number, Question[]> = {
   1: [
     {
@@ -275,19 +277,34 @@ const quizQuestions: Record<number, Question[]> = {
 
 export function QuizModal({ isOpen, onClose, onComplete, unitNumber }: QuizModalProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [lives, setLives] = useState(5);
+  const [lives, setLives] = useState(MAX_LIVES);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
+  const [isFailed, setIsFailed] = useState(false);
 
   if (!isOpen) return null;
 
-  const questions = quizQuestions[unitNumber] || quizQuestions[1];
+  const questions = (quizQuestions[unitNumber] || quizQuestions[1]).slice(0, 3);
   const question = questions[currentQuestion];
   const progress = ((currentQuestion + 1) / questions.length) * 100;
 
+  const resetQuizState = () => {
+    setCurrentQuestion(0);
+    setLives(MAX_LIVES);
+    setSelectedAnswer(null);
+    setShowFeedback(false);
+    setIsCorrect(false);
+    setIsFailed(false);
+  };
+
+  const handleClose = () => {
+    resetQuizState();
+    onClose();
+  };
+
   const handleAnswerSelect = (answerIndex: number) => {
-    if (showFeedback) return;
+    if (showFeedback || isFailed) return;
     
     setSelectedAnswer(answerIndex);
     const correct = answerIndex === question.correctAnswer;
@@ -295,11 +312,20 @@ export function QuizModal({ isOpen, onClose, onComplete, unitNumber }: QuizModal
     setShowFeedback(true);
     
     if (!correct) {
-      setLives(lives - 1);
+      const nextLives = Math.max(0, lives - 1);
+      setLives(nextLives);
+      if (nextLives === 0) {
+        setIsFailed(true);
+      }
     }
   };
 
   const handleNext = () => {
+    if (isFailed) {
+      resetQuizState();
+      return;
+    }
+
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setSelectedAnswer(null);
@@ -307,18 +333,15 @@ export function QuizModal({ isOpen, onClose, onComplete, unitNumber }: QuizModal
     } else {
       onComplete();
       // Reset quiz state
-      setCurrentQuestion(0);
-      setLives(5);
-      setSelectedAnswer(null);
-      setShowFeedback(false);
+      resetQuizState();
     }
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-start bg-black/30 pointer-events-none">
-      <div className="pointer-events-auto w-full max-w-2xl ml-8 mr-[340px] bg-white rounded-2xl shadow-2xl p-8">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4 sm:p-6 pointer-events-none">
+      <div className="pointer-events-auto relative w-full max-w-[720px] bg-white rounded-2xl shadow-2xl p-8 -translate-x-8">
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <X className="w-5 h-5" style={{ color: 'var(--black-400)' }} />
@@ -326,7 +349,7 @@ export function QuizModal({ isOpen, onClose, onComplete, unitNumber }: QuizModal
 
         {/* Lives */}
         <div className="flex gap-2 mb-6">
-          {[...Array(5)].map((_, i) => (
+          {[...Array(MAX_LIVES)].map((_, i) => (
             <Heart
               key={i}
               className="w-8 h-8"
@@ -425,10 +448,12 @@ export function QuizModal({ isOpen, onClose, onComplete, unitNumber }: QuizModal
               </span>
               <div>
                 <p className="font-semibold mb-1" style={{ color: 'var(--black-500)' }}>
-                  {isCorrect ? 'Correct!' : 'Not quite!'}
+                  {isFailed ? 'No lives left!' : isCorrect ? 'Correct!' : 'Not quite!'}
                 </p>
                 <p className="text-sm" style={{ color: 'var(--black-400)' }}>
-                  {question.explanation}
+                  {isFailed
+                    ? 'You made 3 mistakes. The quiz restarts from question 1 with 3 new lives.'
+                    : question.explanation}
                 </p>
               </div>
             </div>
@@ -446,11 +471,15 @@ export function QuizModal({ isOpen, onClose, onComplete, unitNumber }: QuizModal
             onClick={handleNext}
             className="w-full py-3 rounded-xl transition-colors"
             style={{
-              backgroundColor: 'var(--purple-300)',
+              backgroundColor: isFailed ? 'var(--orange-300)' : 'var(--purple-300)',
               color: 'var(--black-500)',
             }}
           >
-            {currentQuestion < questions.length - 1 ? 'Next Question' : 'Complete Quiz'}
+            {isFailed
+              ? 'Retry Quiz'
+              : currentQuestion < questions.length - 1
+              ? 'Next Question'
+              : 'Complete Quiz'}
           </button>
         )}
       </div>

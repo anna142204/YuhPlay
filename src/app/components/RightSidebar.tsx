@@ -1,6 +1,7 @@
 import { Progress } from "./ui/progress";
 import { ArrowRight } from "lucide-react";
-import mascotImg from "figma:asset/160b9e358a268764c5321a85b6cb2558abeea8c9.png";
+
+const mascotImg = new URL("../../assets/160b9e358a268764c5321a85b6cb2558abeea8c9.png", import.meta.url).href;
 
 interface MissionCardProps {
   missionNumber: number;
@@ -51,9 +52,26 @@ export function InvestButton({ onClick, highlighted = false }: InvestButtonProps
 interface PortfolioCardProps {
   change: number;
   hasData: boolean;
+  history: number[];
 }
 
-export function PortfolioCard({ change, hasData }: PortfolioCardProps) {
+export function PortfolioCard({ change, hasData, history }: PortfolioCardProps) {
+  const chartPoints = history.length > 1 ? history : [0, 0.2, 0.1, 0.5, 0.8, 1.2, 1.4];
+  const min = Math.min(...chartPoints);
+  const max = Math.max(...chartPoints);
+  const range = max - min || 1;
+  const width = 200;
+  const height = 80;
+  const stepX = width / Math.max(1, chartPoints.length - 1);
+  const path = chartPoints
+    .map((point, index) => {
+      const x = index * stepX;
+      const normalized = (point - min) / range;
+      const y = height - normalized * 50 - 10;
+      return `${index === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`;
+    })
+    .join(" ");
+
   return (
     <div className="bg-white rounded-xl p-5" style={{ border: '1px solid var(--black-100)' }}>
       <div className="flex justify-between items-center mb-4">
@@ -72,12 +90,12 @@ export function PortfolioCard({ change, hasData }: PortfolioCardProps) {
               </linearGradient>
             </defs>
             <path
-              d="M 0 60 Q 50 50, 100 40 T 200 30"
+              d={`${path} L 200 80 L 0 80 Z`}
               fill="url(#portfolioGradient)"
               stroke="none"
             />
             <path
-              d="M 0 60 Q 50 50, 100 40 T 200 30"
+              d={path}
               fill="none"
               stroke="var(--light-blue-500)"
               strokeWidth="2"

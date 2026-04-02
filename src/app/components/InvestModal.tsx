@@ -1,155 +1,71 @@
 import { X, Search, ArrowLeft, AlertCircle, CheckCircle, TrendingUp } from "lucide-react";
-import { useState } from "react";
-
-interface Asset {
-  id: string;
-  name: string;
-  category: string;
-  sector: string;
-  price: number;
-  risk: "Low risk" | "Medium risk" | "High risk";
-  icon: string;
-  description: string;
-  performance: string;
-}
+import { useMemo, useState } from "react";
+import { ASSETS, type Asset, type AssetType } from "../data/assets";
 
 interface InvestModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onInvest: (asset: Asset, amount: number) => void;
+  onTrade: (asset: Asset, amount: number, action: "buy" | "sell", unitPrice: number) => void;
   balance: number;
+  marketPrices: Record<string, number>;
+  holdings: Record<string, number>;
   currentUnitId?: number;
   lessonStep?: number;
-  currentPortfolio?: string[];
 }
-
-const assets: Asset[] = [
-  { 
-    id: "1", 
-    name: "Nestlé", 
-    category: "Food & Beverage", 
-    sector: "Consumer Goods",
-    price: 100, 
-    risk: "Low risk", 
-    icon: "🍫",
-    description: "World's largest food company. Stable, defensive stock with consistent dividends.",
-    performance: "+5.2% this year"
-  },
-  { 
-    id: "2", 
-    name: "Novartis", 
-    category: "Pharmaceutical", 
-    sector: "Healthcare",
-    price: 280, 
-    risk: "Low risk", 
-    icon: "💊",
-    description: "Global healthcare leader. Strong R&D pipeline and reliable performance.",
-    performance: "+8.1% this year"
-  },
-  { 
-    id: "3", 
-    name: "Roche", 
-    category: "Biotechnology", 
-    sector: "Healthcare",
-    price: 320, 
-    risk: "Low risk", 
-    icon: "🧬",
-    description: "Pioneer in diagnostics and pharmaceuticals. Long-term stability.",
-    performance: "+6.7% this year"
-  },
-  { 
-    id: "4", 
-    name: "Richemont", 
-    category: "Luxury goods", 
-    sector: "Luxury",
-    price: 250, 
-    risk: "Medium risk", 
-    icon: "⌚",
-    description: "Cartier, IWC owner. Benefits from global luxury demand.",
-    performance: "+12.3% this year"
-  },
-  { 
-    id: "5", 
-    name: "UBS", 
-    category: "Banking", 
-    sector: "Finance",
-    price: 360, 
-    risk: "Medium risk", 
-    icon: "🏦",
-    description: "Switzerland's largest bank. Strong wealth management division.",
-    performance: "+15.4% this year"
-  },
-  { 
-    id: "6", 
-    name: "Swatch Group", 
-    category: "Watches", 
-    sector: "Luxury",
-    price: 180, 
-    risk: "Medium risk", 
-    icon: "⏱️",
-    description: "Owner of Omega, Longines. Exposed to Asian market trends.",
-    performance: "+9.8% this year"
-  },
-  { 
-    id: "7", 
-    name: "ABB", 
-    category: "Industrial Tech", 
-    sector: "Industry",
-    price: 150, 
-    risk: "Medium risk", 
-    icon: "⚡",
-    description: "Robotics and automation leader. Green energy transition beneficiary.",
-    performance: "+18.2% this year"
-  },
-  { 
-    id: "8", 
-    name: "Credit Suisse", 
-    category: "Banking", 
-    sector: "Finance",
-    price: 80, 
-    risk: "High risk", 
-    icon: "🏛️",
-    description: "Major bank undergoing restructuring. High risk, potential upside.",
-    performance: "-23.5% this year"
-  },
-];
 
 export function InvestModal({ 
   isOpen, 
   onClose, 
-  onInvest, 
+  onTrade,
   balance,
+  marketPrices,
+  holdings,
   currentUnitId = 1,
-  lessonStep = 1,
-  currentPortfolio = []
+  lessonStep = 1
 }: InvestModalProps) {
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState<"Stocks" | "Crypto" | "ETF" | "Savings">("Stocks");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState<AssetType>("Stocks");
+  const [tradeAction, setTradeAction] = useState<"buy" | "sell">("buy");
   const [showValidation, setShowValidation] = useState(false);
 
-  if (!isOpen) return null;
+  const getLivePrice = (asset: Asset) => marketPrices[asset.id] ?? asset.basePrice;
+  const heldQuantity = selectedAsset ? holdings[selectedAsset.id] ?? 0 : 0;
+
+  const maxQuantity = selectedAsset
+    ? tradeAction === "buy"
+      ? Math.max(0, Math.floor(balance / getLivePrice(selectedAsset)))
+      : heldQuantity
+    : 0;
+
+  const effectiveQuantity = Math.min(quantity, Math.max(1, maxQuantity || 1));
+  const unitPrice = selectedAsset ? getLivePrice(selectedAsset) : 0;
+  const totalCost = selectedAsset ? Math.round(unitPrice * effectiveQuantity) : 0;
+  const remainingBalance = tradeAction === "buy" ? balance - totalCost : balance + totalCost;
 
   const handleConfirmInvestment = () => {
-    if (selectedAsset) {
+    if (selectedAsset && maxQuantity > 0) {
       setShowValidation(true);
       setTimeout(() => {
-        onInvest(selectedAsset, quantity);
+        onTrade(selectedAsset, effectiveQuantity, tradeAction, unitPrice);
         setSelectedAsset(null);
         setQuantity(1);
+        setTradeAction("buy");
         setShowValidation(false);
       }, 1500);
     }
   };
 
-  const totalCost = selectedAsset ? selectedAsset.price * quantity : 0;
-  const remainingBalance = balance - totalCost;
-  const maxQuantity = selectedAsset ? Math.floor(balance / selectedAsset.price) : 1;
+  const ownedAssets = useMemo(
+    () => Object.entries(holdings).filter(([, qty]) => qty > 0).map(([id]) => id),
+    [holdings],
+  );
 
   // Smart recommendations based on lesson context
   const getRecommendation = (asset: Asset) => {
     // Unit 1: First investment - any Swiss stock
-    if (currentUnitId === 1 && currentPortfolio.length === 0) {
+    if (currentUnitId === 1 && ownedAssets.length === 0) {
       if (asset.risk === "Low risk") {
         return {
           type: "good",
@@ -163,9 +79,9 @@ export function InvestModal({
     }
 
     // Unit 2: Diversification - different sector
-    if (currentUnitId === 2 && currentPortfolio.length > 0) {
-      const hasSector = currentPortfolio.some(p => {
-        const existing = assets.find(a => a.id === p);
+    if (currentUnitId === 2 && ownedAssets.length > 0) {
+      const hasSector = ownedAssets.some(p => {
+        const existing = ASSETS.find(a => a.id === p);
         return existing?.sector === asset.sector;
       });
       
@@ -183,7 +99,8 @@ export function InvestModal({
 
     // Unit 3: Buy the dip - look for value
     if (currentUnitId === 3) {
-      if (asset.risk === "High risk" || asset.performance.includes("-")) {
+      const isDiscounted = getLivePrice(asset) < asset.basePrice;
+      if (asset.risk === "High risk" || isDiscounted) {
         return {
           type: "good",
           message: "Good eye! This stock is down - potential 'buy the dip' opportunity."
@@ -214,6 +131,20 @@ export function InvestModal({
 
   const validation = selectedAsset ? getRecommendation(selectedAsset) : null;
 
+  const filteredAssets = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    return ASSETS.filter((asset) => {
+      if (asset.type !== activeTab) {
+        return false;
+      }
+      if (!query) {
+        return true;
+      }
+      const haystack = `${asset.name} ${asset.tagline} ${asset.category} ${asset.sector}`.toLowerCase();
+      return haystack.includes(query);
+    });
+  }, [activeTab, searchTerm]);
+
   const getRiskColor = (risk: string) => {
     switch (risk) {
       case "Low risk":
@@ -227,10 +158,12 @@ export function InvestModal({
     }
   };
 
+  if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-end pointer-events-none">
       <div
-        className="pointer-events-auto relative w-full max-w-md h-full bg-white shadow-2xl flex flex-col"
+        className="pointer-events-auto relative w-full max-w-[400px] h-full bg-white shadow-2xl flex flex-col"
         style={{ maxHeight: "100vh" }}
       >
         {/* Header */}
@@ -261,7 +194,7 @@ export function InvestModal({
           {!selectedAsset && (
             <>
               {/* Context Hint */}
-              {currentUnitId === 1 && currentPortfolio.length === 0 && (
+              {currentUnitId === 1 && ownedAssets.length === 0 && (
                 <div 
                   className="mb-4 p-3 rounded-lg flex items-start gap-2"
                   style={{ backgroundColor: 'var(--light-blue-100)', border: '1px solid var(--light-blue-300)' }}
@@ -273,7 +206,7 @@ export function InvestModal({
                 </div>
               )}
 
-              {currentUnitId === 2 && currentPortfolio.length > 0 && (
+              {currentUnitId === 2 && ownedAssets.length > 0 && (
                 <div 
                   className="mb-4 p-3 rounded-lg flex items-start gap-2"
                   style={{ backgroundColor: 'var(--purple-100)', border: '1px solid var(--purple-300)' }}
@@ -306,6 +239,8 @@ export function InvestModal({
                 <input
                   type="text"
                   placeholder="Search Swiss companies..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 rounded-lg"
                   style={{
                     backgroundColor: 'var(--blue-50)',
@@ -320,7 +255,10 @@ export function InvestModal({
                 {(["Stocks", "Crypto", "ETF", "Savings"] as const).map((tab) => (
                   <button
                     key={tab}
-                    onClick={() => setActiveTab(tab)}
+                    onClick={() => {
+                      setActiveTab(tab);
+                      setSelectedAsset(null);
+                    }}
                     className="px-4 py-2 rounded-lg text-sm transition-colors"
                     style={{
                       backgroundColor:
@@ -341,16 +279,16 @@ export function InvestModal({
           {selectedAsset ? (
             <div>
               {/* Selected Asset Details */}
-              <div className="text-center mb-6">
-                <div className="text-6xl mb-4">{selectedAsset.icon}</div>
+              <div className="text-center mb-4">
+                <div className="text-5xl mb-2">{selectedAsset.icon}</div>
                 <h3 className="text-xl mb-1" style={{ color: 'var(--black-500)' }}>
                   {selectedAsset.name}
                 </h3>
                 <p className="text-sm mb-1" style={{ color: 'var(--black-400)' }}>
-                  {selectedAsset.category}
+                  {selectedAsset.tagline}
                 </p>
                 <span 
-                  className="inline-block px-3 py-1 rounded-full text-xs mb-3"
+                  className="inline-block px-3 py-1 rounded-full text-xs mb-2"
                   style={{ 
                     backgroundColor: getRiskColor(selectedAsset.risk),
                     color: 'white'
@@ -359,21 +297,45 @@ export function InvestModal({
                   {selectedAsset.risk}
                 </span>
                 <p className="text-2xl mb-2" style={{ color: 'var(--black-500)' }}>
-                  {selectedAsset.price} <span className="text-lg">YC</span> / share
+                  {unitPrice.toFixed(0)} <span className="text-lg">YC</span> / unit
                 </p>
                 <p 
                   className="text-sm"
                   style={{ 
-                    color: selectedAsset.performance.includes("-") ? 'var(--orange-400)' : 'var(--light-blue-500)'
+                    color: unitPrice < selectedAsset.basePrice ? 'var(--orange-400)' : 'var(--light-blue-500)'
                   }}
                 >
-                  {selectedAsset.performance}
+                  {((unitPrice - selectedAsset.basePrice) / selectedAsset.basePrice * 100).toFixed(1)}% vs base
                 </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <button
+                  onClick={() => setTradeAction("buy")}
+                  className="rounded-lg py-2"
+                  style={{
+                    backgroundColor: tradeAction === "buy" ? 'var(--light-blue-300)' : 'var(--black-50)',
+                    color: 'var(--black-500)'
+                  }}
+                >
+                  Buy
+                </button>
+                <button
+                  onClick={() => setTradeAction("sell")}
+                  disabled={heldQuantity <= 0}
+                  className="rounded-lg py-2 disabled:opacity-50"
+                  style={{
+                    backgroundColor: tradeAction === "sell" ? 'var(--orange-200)' : 'var(--black-50)',
+                    color: 'var(--black-500)'
+                  }}
+                >
+                  Sell ({heldQuantity})
+                </button>
               </div>
 
               {/* Description */}
               <div 
-                className="p-4 rounded-lg mb-4"
+                className="p-3 rounded-lg mb-3"
                 style={{ backgroundColor: 'var(--blue-50)' }}
               >
                 <p className="text-sm" style={{ color: 'var(--black-400)' }}>
@@ -384,7 +346,7 @@ export function InvestModal({
               {/* Smart Validation */}
               {validation && (
                 <div 
-                  className="p-4 rounded-lg mb-4 flex items-start gap-3"
+                  className="p-3 rounded-lg mb-3 flex items-start gap-3"
                   style={{ 
                     backgroundColor: validation.type === "good" 
                       ? 'var(--light-blue-100)' 
@@ -417,7 +379,7 @@ export function InvestModal({
               )}
 
               {/* Quantity Slider */}
-              <div className="mb-6">
+              <div className="mb-4">
                 <div className="flex justify-between items-center mb-2">
                   <label className="text-sm" style={{ color: 'var(--black-400)' }}>
                     Quantity
@@ -427,14 +389,15 @@ export function InvestModal({
                 <input
                   type="range"
                   min="1"
-                  max={maxQuantity}
-                  value={quantity}
-                  onChange={(e) => setQuantity(Number(e.target.value))}
+                  max={Math.max(1, maxQuantity)}
+                  value={effectiveQuantity}
+                  onChange={(e) => setQuantity(Number(e.target.value) || 1)}
+                  disabled={maxQuantity <= 0}
                   className="w-full h-2 rounded-lg appearance-none cursor-pointer"
                   style={{
                     background: `linear-gradient(to right, var(--orange-400) 0%, var(--orange-400) ${
-                      (quantity / maxQuantity) * 100
-                    }%, var(--black-100) ${(quantity / maxQuantity) * 100}%, var(--black-100) 100%)`,
+                      (effectiveQuantity / Math.max(1, maxQuantity)) * 100
+                    }%, var(--black-100) ${(effectiveQuantity / Math.max(1, maxQuantity)) * 100}%, var(--black-100) 100%)`,
                   }}
                 />
                 <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--black-300)' }}>
@@ -444,9 +407,9 @@ export function InvestModal({
               </div>
 
               {/* Summary */}
-              <div className="space-y-3 mb-6 p-4 rounded-lg" style={{ backgroundColor: 'var(--blue-50)' }}>
+              <div className="space-y-2 mb-4 p-3 rounded-lg" style={{ backgroundColor: 'var(--blue-50)' }}>
                 <div className="flex justify-between">
-                  <span style={{ color: 'var(--black-300)' }}>Total cost</span>
+                  <span style={{ color: 'var(--black-300)' }}>{tradeAction === "buy" ? 'Total cost' : 'Total receive'}</span>
                   <span className="font-semibold" style={{ color: 'var(--black-500)' }}>{totalCost} YC</span>
                 </div>
                 <div className="flex justify-between">
@@ -470,41 +433,25 @@ export function InvestModal({
               {/* Success Animation */}
               {showValidation && (
                 <div 
-                  className="mb-4 p-4 rounded-lg text-center"
+                  className="mb-3 p-3 rounded-lg text-center"
                   style={{ backgroundColor: 'var(--light-blue-200)', border: '2px solid var(--light-blue-400)' }}
                 >
                   <CheckCircle className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--light-blue-500)' }} />
                   <p className="font-semibold" style={{ color: 'var(--black-500)' }}>
-                    Investment Confirmed! 🎉
+                    Investment Confirmed!
                   </p>
                 </div>
               )}
 
-              {/* Confirm Button */}
-              <button
-                onClick={handleConfirmInvestment}
-                disabled={totalCost > balance || showValidation}
-                className="w-full py-3 rounded-xl transition-colors disabled:opacity-50"
-                style={{
-                  backgroundColor: validation?.type === "good" ? 'var(--light-blue-400)' : 'var(--purple-400)',
-                  color: 'white',
-                }}
-              >
-                {showValidation ? 'Processing...' : `Invest ${totalCost} YC`}
-              </button>
-
-              {totalCost > balance && (
-                <p className="text-xs text-center mt-2" style={{ color: 'var(--orange-400)' }}>
-                  Insufficient balance
-                </p>
-              )}
             </div>
           ) : (
             <div className="space-y-3">
               {/* Asset List */}
-              {assets.map((asset) => {
-                const owned = currentPortfolio.includes(asset.id);
+              {filteredAssets.map((asset) => {
+                const owned = (holdings[asset.id] ?? 0) > 0;
                 const recommendation = getRecommendation(asset);
+                const livePrice = getLivePrice(asset);
+                const perf = ((livePrice - asset.basePrice) / asset.basePrice) * 100;
                 
                 return (
                   <button
@@ -529,7 +476,12 @@ export function InvestModal({
                       </div>
                     )}
                     
-                    <div className="text-4xl">{asset.icon}</div>
+                    <div
+                      className="w-11 h-11 rounded-lg flex items-center justify-center text-sm"
+                      style={{ backgroundColor: 'var(--blue-100)', color: 'var(--black-500)' }}
+                    >
+                      {asset.icon}
+                    </div>
                     <div className="flex-1 text-left">
                       <div className="flex items-center gap-2 mb-1">
                         <h4 style={{ color: 'var(--black-500)' }}>{asset.name}</h4>
@@ -543,27 +495,63 @@ export function InvestModal({
                         )}
                       </div>
                       <p className="text-xs mb-1" style={{ color: 'var(--black-300)' }}>
-                        {asset.category} • {asset.sector}
+                        {asset.tagline}
                       </p>
                       <p 
                         className="text-xs"
                         style={{ 
-                          color: asset.performance.includes("-") ? 'var(--orange-400)' : 'var(--light-blue-500)'
+                          color: perf < 0 ? 'var(--orange-400)' : 'var(--light-blue-500)'
                         }}
                       >
-                        {asset.performance}
+                        {perf >= 0 ? '+' : ''}{perf.toFixed(1)}% vs base
                       </p>
                     </div>
                     <div className="text-right">
-                      <p style={{ color: 'var(--black-500)' }}>{asset.price}</p>
+                      <p style={{ color: 'var(--black-500)' }}>{livePrice.toFixed(0)}</p>
                       <p className="text-xs" style={{ color: 'var(--black-300)' }}>YC</p>
                     </div>
                   </button>
                 );
               })}
+
+              {filteredAssets.length === 0 && (
+                <div className="text-center py-10 rounded-xl" style={{ backgroundColor: 'var(--blue-50)' }}>
+                  <p style={{ color: 'var(--black-300)' }}>No assets match your search.</p>
+                </div>
+              )}
             </div>
           )}
         </div>
+
+        {selectedAsset && (
+          <div
+            className="shrink-0 bg-white p-4"
+            style={{ borderTop: '1px solid var(--black-100)' }}
+          >
+            <button
+              onClick={handleConfirmInvestment}
+              disabled={(tradeAction === "buy" && totalCost > balance) || maxQuantity <= 0 || showValidation}
+              className="w-full py-3 rounded-xl transition-colors disabled:opacity-50"
+              style={{
+                backgroundColor: tradeAction === "sell" ? 'var(--orange-300)' : validation?.type === "good" ? 'var(--light-blue-400)' : 'var(--purple-400)',
+                color: 'white',
+              }}
+            >
+              {showValidation ? 'Processing...' : tradeAction === "buy" ? `Confirm investment (${totalCost} YC)` : `Confirm sale (+${totalCost} YC)`}
+            </button>
+
+            {tradeAction === "buy" && totalCost > balance && (
+              <p className="text-xs text-center mt-2" style={{ color: 'var(--orange-400)' }}>
+                Insufficient balance
+              </p>
+            )}
+            {tradeAction === "sell" && maxQuantity <= 0 && (
+              <p className="text-xs text-center mt-2" style={{ color: 'var(--orange-400)' }}>
+                You do not own this asset yet
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

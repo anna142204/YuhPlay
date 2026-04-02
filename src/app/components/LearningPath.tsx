@@ -1,4 +1,4 @@
-import { Sprout, Shield, TrendingDown, Star } from "lucide-react";
+import { MoveDownRight, Shield, Sprout, Star } from "lucide-react";
 import TreasureChest from "../../imports/Group5/Group5";
 
 interface UnitProgress {
@@ -18,10 +18,13 @@ interface Unit {
 
 interface LearningPathProps {
   onUnitClick: (unitId: number) => void;
+  onChestClick: () => void;
   unitsProgress: UnitProgress[];
 }
 
-export function LearningPath({ onUnitClick, unitsProgress }: LearningPathProps) {
+export function LearningPath({ onUnitClick, onChestClick, unitsProgress }: LearningPathProps) {
+  const pathShape = "M115.201 16C115.201 16 39.9997 90.4839 29.9995 159.484C19.9993 228.484 115.201 273.984 115.201 273.984C115.201 273.984 203.499 309.984 203.499 380.984C203.499 451.984 115.201 487.484 115.201 487.484C115.201 487.484 16.0001 553.984 16 614.484C15.9999 674.984 75.9015 684.484 115.201 708.984C154.5 733.484 155 779.484 147.5 822.984C140 866.484 90.4999 936.984 90.4999 936.984";
+
   const units: Unit[] = [
     {
       id: 1,
@@ -42,7 +45,7 @@ export function LearningPath({ onUnitClick, unitsProgress }: LearningPathProps) 
       title: "Unit 3",
       subtitle: "Market crash survival",
       lessons: 3,
-      icon: <TrendingDown className="w-8 h-8" style={{ color: 'var(--orange-500)' }} />,
+      icon: <MoveDownRight className="w-8 h-8" style={{ color: 'var(--orange-500)' }} />,
     },
     {
       id: 4,
@@ -64,16 +67,35 @@ export function LearningPath({ onUnitClick, unitsProgress }: LearningPathProps) 
     return unit?.completed || false;
   };
 
+  const rows = [
+    { top: 3.53, side: "left", textWidth: 30.0, gap: 3.5 },
+    { top: 21.08, side: "right", textWidth: 30.0, gap: 3.5 },
+    { top: 38.62, side: "left", textWidth: 40.0, gap: 3.5 },
+    { top: 56.24, side: "right", textWidth: 40.0, gap: 3.5 },
+  ] as const;
+
+  const highlightedSegments = [
+    { fromUnit: 1, start: 7, end: 30 },
+    { fromUnit: 2, start: 30, end: 56 },
+    { fromUnit: 3, start: 56, end: 80 },
+    { fromUnit: 4, start: 80, end: 97 },
+  ] as const;
+
   return (
-    <div className="flex flex-col items-center py-12 px-8 relative min-h-full">
-      {/* SVG Path */}
+    <div className="px-4 py-6">
+      <div className="relative mx-auto w-full max-w-[640px] aspect-[723/1254]">
+      {/* SVG Path from Figma node 6:4 */}
       <svg
-        className="absolute top-0 left-1/2 -translate-x-1/2"
-        width="400"
-        height="100%"
-        viewBox="0 0 400 1000"
-        preserveAspectRatio="xMidYMid meet"
-        style={{ minHeight: '100%' }}
+        className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+        width="220.499"
+        height="955.985"
+        viewBox="0 0 220.499 955.985"
+        preserveAspectRatio="none"
+        style={{
+          top: "5.61%",
+          width: "25.93%",
+          height: "73.44%",
+        }}
       >
         <defs>
           <linearGradient id="pathGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -85,15 +107,7 @@ export function LearningPath({ onUnitClick, unitsProgress }: LearningPathProps) 
           </filter>
         </defs>
         <path
-          d="M 200 20 
-             C 200 20, 80 110, 60 180
-             C 40 250, 200 295, 200 295
-             C 200 295, 340 335, 340 420
-             C 340 505, 200 545, 200 545
-             C 200 545, 30 615, 30 685
-             C 30 755, 130 770, 200 800
-             C 270 830, 270 885, 255 940
-             C 240 980, 160 1000, 160 1000"
+          d={pathShape}
           fill="none"
           stroke="url(#pathGradient)"
           strokeWidth="32"
@@ -101,64 +115,116 @@ export function LearningPath({ onUnitClick, unitsProgress }: LearningPathProps) 
           strokeLinejoin="round"
           filter="url(#pathShadow)"
         />
+
+        {highlightedSegments.map((segment) => {
+          const fromUnitProgress = unitsProgress.find((u) => u.unitId === segment.fromUnit);
+          if (!fromUnitProgress?.completed) {
+            return null;
+          }
+
+          const segmentLength = segment.end - segment.start;
+
+          return (
+            <path
+              key={segment.fromUnit}
+              d={pathShape}
+              fill="none"
+              stroke="var(--orange-400)"
+              strokeWidth="32"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              pathLength={100}
+              strokeDasharray={`${segmentLength} 100`}
+              strokeDashoffset={-segment.start}
+            />
+          );
+        })}
       </svg>
 
       {/* Units */}
-      <div className="flex flex-col gap-24 relative z-10 mt-12">
+      <div className="absolute inset-0 z-10">
         {units.map((unit, index) => {
           const unlocked = isUnitUnlocked(unit.id);
           const completed = isUnitCompleted(unit.id);
+          const row = rows[index];
+          const borderColor = !unlocked
+            ? 'var(--black-200)'
+            : completed
+              ? 'var(--orange-400)'
+              : 'var(--light-blue-400)';
           
           return (
-            <div key={index} className="flex items-center gap-8">
+            <div key={unit.id}>
+              <div
+                className={row.side === "left" ? "absolute text-right" : "absolute text-left"}
+                style={
+                  row.side === "left"
+                    ? {
+                        top: `calc(${row.top}% + 5%)`,
+                        right: `calc(50% + 8.30% + ${row.gap}%)`,
+                        width: `${row.textWidth}%`,
+                        transform: 'translateY(-50%)',
+                      }
+                    : {
+                        top: `calc(${row.top}% + 5%)`,
+                        left: `calc(50% + 8.30% + ${row.gap}%)`,
+                        width: `${row.textWidth}%`,
+                        transform: 'translateY(-50%)',
+                      }
+                }
+              >
+                <p className="mb-0.5 text-[clamp(11px,1.4vw,14px)] leading-tight" style={{ color: 'var(--black-300)' }}>{unit.title}</p>
+                <h3 className="mb-0.5 text-[clamp(18px,2.2vw,24px)] leading-tight" style={{ color: 'var(--black-500)' }}>{unit.subtitle}</h3>
+                <p className="text-[clamp(11px,1.4vw,14px)] leading-tight" style={{ color: 'var(--black-300)' }}>
+                  {unit.lessons} lessons {completed && '· Completed ✓'}
+                </p>
+              </div>
+
               {/* Icon Circle */}
               <button
                 onClick={() => unlocked && onUnitClick(unit.id)}
                 disabled={!unlocked}
-                className={`relative w-28 h-28 rounded-full bg-white flex items-center justify-center shadow-xl transition-all ${
-                  !unlocked ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110 cursor-pointer'
+                className={`absolute left-1/2 -translate-x-1/2 rounded-full bg-[var(--light-blue-100)] flex items-center justify-center shadow-xl transition-all ${
+                  !unlocked ? 'cursor-not-allowed' : 'hover:scale-110 cursor-pointer'
                 }`}
                 style={{ 
-                  border: `5px solid ${
-                    !unlocked ? 'var(--black-200)' : 
-                    completed ? 'var(--orange-400)' :
-                    'var(--light-blue-400)'
-                  }`,
+                  top: `${row.top}%`,
+                  width: '16.60%',
+                  aspectRatio: '1 / 1',
+                  backgroundColor: '#dfe6ea',
+                  border: `4px solid ${borderColor}`,
                 }}
               >
                 {!unlocked ? (
-                  <span className="text-4xl">🔒</span>
+                  <span className="text-[clamp(24px,4vw,40px)]">🔒</span>
                 ) : completed ? (
                   <>
                     {unit.icon}
                     <div 
-                      className="absolute -top-2 -right-2 w-10 h-10 rounded-full flex items-center justify-center shadow-lg"
+                      className="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center shadow-lg"
                       style={{ backgroundColor: 'var(--orange-400)' }}
                     >
-                      <span className="text-white text-xl">✓</span>
+                      <span className="text-white text-sm">✓</span>
                     </div>
                   </>
                 ) : (
                   unit.icon
                 )}
               </button>
-              
-              {/* Unit Info */}
-              <div className={index % 2 === 0 ? "text-left" : "text-right order-first"}>
-                <p className="text-sm mb-1" style={{ color: 'var(--black-300)' }}>{unit.title}</p>
-                <h3 className="text-xl mb-1" style={{ color: 'var(--black-500)' }}>{unit.subtitle}</h3>
-                <p className="text-sm" style={{ color: 'var(--black-200)' }}>
-                  {unit.lessons} lessons {completed && '· Completed ✓'}
-                </p>
-              </div>
             </div>
           );
         })}
       </div>
 
       {/* Treasure Chest at Bottom */}
-      <div className="mt-16 relative z-10 w-32 h-32 hover:scale-110 transition-transform cursor-pointer">
+      <button
+        type="button"
+        onClick={onChestClick}
+        className="absolute left-1/2 -translate-x-1/2 z-10 w-[17.36%] aspect-square hover:scale-110 transition-transform cursor-pointer"
+        style={{ top: '74.51%' }}
+      >
         <TreasureChest />
+      </button>
       </div>
     </div>
   );
