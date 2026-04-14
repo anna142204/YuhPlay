@@ -1,4 +1,4 @@
-import { BookOpen, Briefcase, Trophy, Gift } from "lucide-react";
+import { BookOpen, Compass, BookText, Gift } from "lucide-react";
 import { cn } from "./ui/utils";
 
 interface NavigationItem {
@@ -9,15 +9,19 @@ interface NavigationItem {
 }
 
 interface NavigationProps {
+  activeTab: "learning" | "sandbox" | "theory" | "rewards";
+  onLearningPathClick: () => void;
+  onSandboxClick: () => void;
+  onTheoryClick: () => void;
   onRewardsClick: () => void;
 }
 
-export function Navigation({ onRewardsClick }: NavigationProps) {
+export function Navigation({ activeTab, onLearningPathClick, onSandboxClick, onTheoryClick, onRewardsClick }: NavigationProps) {
   const items: NavigationItem[] = [
-    { icon: <BookOpen className="w-5 h-5" />, label: "Learning path", active: true },
-    { icon: <Briefcase className="w-5 h-5" />, label: "My portfolio" },
-    { icon: <Trophy className="w-5 h-5" />, label: "League ranking" },
-    { icon: <Gift className="w-5 h-5" />, label: "Rewards", onClick: onRewardsClick },
+    { icon: <BookOpen className="w-5 h-5" />, label: "Learning path", active: activeTab === "learning", onClick: onLearningPathClick },
+    { icon: <BookText className="w-5 h-5" />, label: "Theory details", active: activeTab === "theory", onClick: onTheoryClick },
+    { icon: <Compass className="w-5 h-5" />, label: "Sandbox", active: activeTab === "sandbox", onClick: onSandboxClick },
+    { icon: <Gift className="w-5 h-5" />, label: "Rewards", active: activeTab === "rewards", onClick: onRewardsClick },
   ];
 
   return (
@@ -26,7 +30,7 @@ export function Navigation({ onRewardsClick }: NavigationProps) {
         <button
           key={index}
           className={cn(
-            "flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors",
+            "flex items-center gap-4 px-4 py-4 rounded-lg text-left text-[17px] transition-colors",
             item.active
               ? ""
               : "hover:bg-gray-100"
@@ -40,7 +44,7 @@ export function Navigation({ onRewardsClick }: NavigationProps) {
           onClick={item.onClick}
         >
           {item.icon}
-          <span>{item.label}</span>
+          <span className="leading-none">{item.label}</span>
         </button>
       ))}
     </nav>

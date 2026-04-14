@@ -297,7 +297,7 @@ export function InvestModal({
                   {selectedAsset.risk}
                 </span>
                 <p className="text-2xl mb-2" style={{ color: 'var(--black-500)' }}>
-                  {unitPrice.toFixed(0)} <span className="text-lg">YC</span> / unit
+                  {unitPrice.toFixed(0)} <span className="text-lg">YQ</span> / unit
                 </p>
                 <p 
                   className="text-sm"
@@ -312,7 +312,7 @@ export function InvestModal({
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <button
                   onClick={() => setTradeAction("buy")}
-                  className="rounded-lg py-2"
+                  className="rounded-lg py-2 cursor-pointer hover:brightness-95"
                   style={{
                     backgroundColor: tradeAction === "buy" ? 'var(--light-blue-300)' : 'var(--black-50)',
                     color: 'var(--black-500)'
@@ -323,9 +323,9 @@ export function InvestModal({
                 <button
                   onClick={() => setTradeAction("sell")}
                   disabled={heldQuantity <= 0}
-                  className="rounded-lg py-2 disabled:opacity-50"
+                  className="rounded-lg py-2 cursor-pointer hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:brightness-100"
                   style={{
-                    backgroundColor: tradeAction === "sell" ? 'var(--orange-200)' : 'var(--black-50)',
+                    backgroundColor: tradeAction === "sell" ? 'var(--orange-300)' : 'var(--black-50)',
                     color: 'var(--black-500)'
                   }}
                 >
@@ -410,7 +410,7 @@ export function InvestModal({
               <div className="space-y-2 mb-4 p-3 rounded-lg" style={{ backgroundColor: 'var(--blue-50)' }}>
                 <div className="flex justify-between">
                   <span style={{ color: 'var(--black-300)' }}>{tradeAction === "buy" ? 'Total cost' : 'Total receive'}</span>
-                  <span className="font-semibold" style={{ color: 'var(--black-500)' }}>{totalCost} YC</span>
+                  <span className="font-semibold" style={{ color: 'var(--black-500)' }}>{totalCost} YQ</span>
                 </div>
                 <div className="flex justify-between">
                   <span style={{ color: 'var(--black-300)' }}>Portfolio impact</span>
@@ -421,7 +421,7 @@ export function InvestModal({
                 <div className="flex justify-between">
                   <span style={{ color: 'var(--black-300)' }}>Remaining balance</span>
                   <span style={{ color: remainingBalance < balance * 0.2 ? 'var(--orange-400)' : 'var(--black-500)' }}>
-                    {remainingBalance} YC
+                    {remainingBalance} YQ
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -508,7 +508,7 @@ export function InvestModal({
                     </div>
                     <div className="text-right">
                       <p style={{ color: 'var(--black-500)' }}>{livePrice.toFixed(0)}</p>
-                      <p className="text-xs" style={{ color: 'var(--black-300)' }}>YC</p>
+                      <p className="text-xs" style={{ color: 'var(--black-300)' }}>YQ</p>
                     </div>
                   </button>
                 );
@@ -531,13 +531,13 @@ export function InvestModal({
             <button
               onClick={handleConfirmInvestment}
               disabled={(tradeAction === "buy" && totalCost > balance) || maxQuantity <= 0 || showValidation}
-              className="w-full py-3 rounded-xl transition-colors disabled:opacity-50"
+              className="w-full py-3 rounded-xl transition-colors disabled:opacity-50 cursor-pointer hover:brightness-95"
               style={{
-                backgroundColor: tradeAction === "sell" ? 'var(--orange-300)' : validation?.type === "good" ? 'var(--light-blue-400)' : 'var(--purple-400)',
+                backgroundColor: tradeAction === "sell" ? 'var(--orange-400) ' : validation?.type === "good" ? 'var(--light-blue-400)' : 'var(--purple-400)',
                 color: 'white',
               }}
             >
-              {showValidation ? 'Processing...' : tradeAction === "buy" ? `Confirm investment (${totalCost} YC)` : `Confirm sale (+${totalCost} YC)`}
+              {showValidation ? 'Processing...' : tradeAction === "buy" ? `Confirm investment (${totalCost} YQ)` : `Confirm sale (+${totalCost} YQ)`}
             </button>
 
             {tradeAction === "buy" && totalCost > balance && (

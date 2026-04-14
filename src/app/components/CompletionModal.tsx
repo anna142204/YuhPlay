@@ -89,9 +89,9 @@ export function CompletionModal({ isOpen, onClose, unitNumber, unitTitle, xpEarn
           </div>
           <div
             className="p-4 rounded-xl"
-            style={{ backgroundColor: 'var(--light-purple-200)', border: '1px solid var(--light-purple-400)' }}
+            style={{ backgroundColor: 'var(--orange-50)', border: '1px solid var(--orange-200)' }}
           >
-            <TrendingUp className="w-6 h-6 mx-auto mb-2" style={{ color: 'var(--purple-400)' }} />
+            <TrendingUp className="w-6 h-6 mx-auto mb-2" style={{ color: 'var(--orange-500)' }} />
             <p className="text-2xl mb-1" style={{ color: 'var(--black-500)' }}>
               100%
             </p>

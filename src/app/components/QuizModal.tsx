@@ -342,7 +342,7 @@ export function QuizModal({ isOpen, onClose, onComplete, unitNumber }: QuizModal
       <div className="pointer-events-auto relative w-full max-w-[720px] bg-white rounded-2xl shadow-2xl p-8 -translate-x-8">
         <button
           onClick={handleClose}
-          className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" style={{ color: 'var(--black-400)' }} />
         </button>
@@ -388,7 +388,7 @@ export function QuizModal({ isOpen, onClose, onComplete, unitNumber }: QuizModal
                 key={index}
                 onClick={() => handleAnswerSelect(index)}
                 disabled={showFeedback}
-                className="w-full p-4 rounded-xl text-left transition-all flex items-center gap-3 group"
+                className="w-full p-4 rounded-xl text-left transition-all flex items-center gap-3 group cursor-pointer"
                 style={{
                   backgroundColor: showAsCorrect
                     ? 'var(--light-blue-200)'
@@ -469,7 +469,7 @@ export function QuizModal({ isOpen, onClose, onComplete, unitNumber }: QuizModal
         {showFeedback && (
           <button
             onClick={handleNext}
-            className="w-full py-3 rounded-xl transition-colors"
+            className="w-full py-3 rounded-xl transition-colors cursor-pointer"
             style={{
               backgroundColor: isFailed ? 'var(--orange-300)' : 'var(--purple-300)',
               color: 'var(--black-500)',

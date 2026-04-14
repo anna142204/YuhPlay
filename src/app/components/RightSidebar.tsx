@@ -13,7 +13,7 @@ interface MissionCardProps {
 
 export function MissionCard({ missionNumber, title, description, progress, total }: MissionCardProps) {
   return (
-    <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--light-purple-300)', border: '1px solid var(--light-purple-400)' }}>
+    <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--light-blue-100)', border: '1px solid var(--light-blue-300)' }}>
       <p className="text-xs mb-1" style={{ color: 'var(--black-300)' }}>MISSION {missionNumber}</p>
       <h3 style={{ color: 'var(--black-500)' }}>{title}</h3>
       <p className="text-sm mb-3" style={{ color: 'var(--black-300)' }}>{description}</p>
@@ -28,19 +28,21 @@ export function MissionCard({ missionNumber, title, description, progress, total
 interface InvestButtonProps {
   onClick: () => void;
   highlighted?: boolean;
+  disabled?: boolean;
 }
 
-export function InvestButton({ onClick, highlighted = false }: InvestButtonProps) {
+export function InvestButton({ onClick, highlighted = false, disabled = false }: InvestButtonProps) {
   return (
     <button 
       onClick={onClick}
+      disabled={disabled}
       className={`w-full rounded-xl py-4 flex items-center justify-center gap-2 transition-all ${
         highlighted ? 'ring-4 ring-orange-400 animate-pulse' : ''
-      }`}
+      } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
       style={{ 
-        backgroundColor: highlighted ? 'var(--orange-400)' : 'white',
-        border: `2px solid ${highlighted ? 'var(--orange-500)' : 'var(--black-100)'}`,
-        color: highlighted ? 'white' : 'var(--black-500)',
+        backgroundColor: highlighted ? 'var(--orange-400)' : disabled ? 'var(--black-50)' : 'white',
+        border: `2px solid ${highlighted ? 'var(--orange-500)' : disabled ? 'var(--black-100)' : 'var(--black-100)'}`,
+        color: highlighted ? 'white' : disabled ? 'var(--black-300)' : 'var(--black-500)',
       }}
     >
       INVEST
@@ -119,10 +121,10 @@ export function Mascot({ message }: MascotProps) {
   return (
     <div className="relative h-[210px] w-full max-w-[290px] overflow-visible">
       <div
-        className="absolute left-10 top-0 max-w-[210px] rounded-[28px] rounded-br-md px-4 py-4"
+        className="absolute left-3 top-0 max-w-[195px] rounded-[28px] rounded-br-md px-4 py-4"
         style={{
-          background: 'linear-gradient(180deg, var(--light-purple-200) 0%, var(--light-purple-300) 100%)',
-          border: '2px solid var(--light-purple-400)',
+          background: 'white',
+          border: '2px solid var(--light-blue-300)',
         }}
       >
         <p className="text-sm leading-relaxed" style={{ color: 'var(--black-500)' }}>
@@ -133,7 +135,7 @@ export function Mascot({ message }: MascotProps) {
       <img
         src={mascotImg}
         alt="Mascot"
-        className="absolute bottom-0 right-[-50px] h-50 w-50 select-none"
+        className="absolute bottom-0 right-[-70px] h-50 w-50 select-none"
       />
     </div>
   );
