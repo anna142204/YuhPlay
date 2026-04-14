@@ -534,7 +534,7 @@ export default function App() {
     if (unit1.completed && unit2.completed && unit3.completed && unit4.completed) {
       return {
         number: 5,
-        title: "Master Investor! 🎓",
+        title: "Master Investor!",
         description: "You've completed all units!",
         progress: 3,
         total: 3,
@@ -570,7 +570,7 @@ export default function App() {
     }
     
     if (unit1.completed) {
-      return "Excellent work! You completed Unit 1! 🎉";
+      return "Excellent work! You completed Unit 1!";
     }
     
     return "I'm here to help you learn about investing!";
@@ -1009,7 +1009,7 @@ export default function App() {
 
       {/* Right Sidebar */}
       <div
-        className="w-[400px] h-full shrink-0 overflow-hidden p-6 flex flex-col gap-4 relative z-50 transition-colors duration-300"
+        className="w-[400px] h-full shrink-0 overflow-hidden p-8 flex flex-col gap-4 relative z-50 transition-colors duration-300"
         style={{
           borderLeft: `2px solid ${activeRightTheme.border}`,
           backgroundColor: activeRightTheme.bg,

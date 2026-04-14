@@ -13,7 +13,7 @@ interface MissionCardProps {
 
 export function MissionCard({ missionNumber, title, description, progress, total }: MissionCardProps) {
   return (
-    <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--light-blue-100)', border: '1px solid var(--light-blue-300)' }}>
+    <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--blue-100)', border: '2px solid var(--blue-300)' }}>
       <p className="text-xs mb-1" style={{ color: 'var(--black-300)' }}>MISSION {missionNumber}</p>
       <h3 style={{ color: 'var(--black-500)' }}>{title}</h3>
       <p className="text-sm mb-3" style={{ color: 'var(--black-300)' }}>{description}</p>
@@ -36,13 +36,13 @@ export function InvestButton({ onClick, highlighted = false, disabled = false }:
     <button 
       onClick={onClick}
       disabled={disabled}
-      className={`w-full rounded-xl py-4 flex items-center justify-center gap-2 transition-all ${
+      className={`w-full rounded-xl py-3 flex items-center justify-center gap-2 transition-all ${
         highlighted ? 'ring-4 ring-orange-400 animate-pulse' : ''
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
       style={{ 
         backgroundColor: highlighted ? 'var(--orange-400)' : disabled ? 'var(--black-50)' : 'white',
         border: `2px solid ${highlighted ? 'var(--orange-500)' : disabled ? 'var(--black-100)' : 'var(--black-100)'}`,
-        color: highlighted ? 'white' : disabled ? 'var(--black-300)' : 'var(--black-500)',
+        color: highlighted ? 'white' : disabled ? 'var(--black-400)' : 'var(--black-500)',
       }}
     >
       INVEST
