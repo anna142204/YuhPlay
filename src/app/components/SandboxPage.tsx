@@ -8,6 +8,7 @@ interface SandboxPageProps {
   onOpenInvest: () => void;
   onDirectTrade: (assetId: string, action: "buy" | "sell", quantity?: number) => void;
   onSetSellLimit: (assetId: string, limitPrice: number | null) => void;
+  onSetBuyLimit: (assetId: string, limitPrice: number | null) => void;
   totalAccountValue: number;
   balance: number;
   portfolioValue: number;
@@ -24,6 +25,7 @@ interface SandboxPageProps {
     quantity: number;
     averagePrice: number;
     sellLimitPrice?: number | null;
+    buyLimitPrice?: number | null;
   }>;
 }
 
@@ -81,6 +83,7 @@ export function SandboxPage({
   onOpenInvest,
   onDirectTrade,
   onSetSellLimit,
+  onSetBuyLimit,
   totalAccountValue,
   balance,
   portfolioValue,
@@ -93,6 +96,7 @@ export function SandboxPage({
   holdings,
 }: SandboxPageProps) {
   const [limitDrafts, setLimitDrafts] = useState<Record<string, string>>({});
+  const [buyLimitDrafts, setBuyLimitDrafts] = useState<Record<string, string>>({});
   const [tradeQtyDrafts, setTradeQtyDrafts] = useState<Record<string, string>>({});
   const [expandedAssetId, setExpandedAssetId] = useState<string | null>(null);
   const cashRatio = totalAccountValue > 0 ? (balance / totalAccountValue) * 100 : 0;
@@ -207,7 +211,7 @@ export function SandboxPage({
         </div>
         <div className="rounded-xl p-4" style={{ backgroundColor: 'white', border: '1px solid var(--black-100)' }}>
           <p className="text-xs mb-1" style={{ color: 'var(--black-300)' }}>Session return</p>
-          <p className="text-lg font-medium" style={{ color: sessionReturnPct >= 0 ? 'var(--light-blue-400)' : 'var(--orange-400)' }}>
+          <p className="text-lg font-medium" style={{ color: sessionReturnPct >= 0 ? 'var(--green-400)' : 'var(--red-400)' }}>
             {sessionReturnPct >= 0 ? "+" : ""}{sessionReturnPct.toFixed(2)}%
           </p>
         </div>
@@ -230,7 +234,7 @@ export function SandboxPage({
 
         <div className="rounded-xl px-4 py-3 mb-5" style={{ backgroundColor: 'var(--blue-50)', border: '1px solid var(--black-100)' }}>
           <p className="text-sm" style={{ color: 'var(--black-500)' }}>
-            Trade directly from the table or set an auto-sell limit that triggers when the market price reaches it.
+            Trade directly from the table or set auto-sell / auto-buy limits that trigger automatically.
           </p>
         </div>
         
@@ -246,7 +250,7 @@ export function SandboxPage({
           </div>
           <div className="rounded-lg p-3" style={{ backgroundColor: 'var(--blue-50)' }}>
             <p className="text-xs mb-1" style={{ color: 'var(--black-300)' }}>Portfolio return</p>
-            <p className="font-medium" style={{ color: portfolioChange >= 0 ? 'var(--light-blue-400)' : 'var(--orange-400)' }}>
+            <p className="font-medium" style={{ color: portfolioChange >= 0 ? 'var(--green-400)' : 'var(--red-400)' }}>
               {portfolioChange >= 0 ? "+" : ""}{portfolioChange.toFixed(2)}%
             </p>
           </div>
@@ -338,6 +342,8 @@ export function SandboxPage({
                   const pnlPct = costBasis > 0 ? (pnl / costBasis) * 100 : 0;
                   const currentLimit = holding.sellLimitPrice ?? null;
                   const draftValue = limitDrafts[holding.assetId] ?? (currentLimit != null ? String(Math.round(currentLimit)) : "");
+                  const currentBuyLimit = holding.buyLimitPrice ?? null;
+                  const buyDraftValue = buyLimitDrafts[holding.assetId] ?? (currentBuyLimit != null ? String(Math.round(currentBuyLimit)) : "");
                   const qtyDraft = tradeQtyDrafts[holding.assetId] ?? "1";
                   const parsedQty = Number.parseFloat(qtyDraft);
                   const safeQty = Number.isFinite(parsedQty) && parsedQty > 0 ? parsedQty : 1;
@@ -351,7 +357,7 @@ export function SandboxPage({
                         <td className="px-2 py-3 text-xs" style={{ color: 'var(--black-400)' }}>{Math.round(holding.averagePrice).toLocaleString()}</td>
                         <td className="px-2 py-3 text-xs" style={{ color: 'var(--black-400)' }}>{Math.round(livePrice).toLocaleString()}</td>
                         <td className="px-2 py-3 text-xs" style={{ color: 'var(--black-500)' }}>{Math.round(marketValue).toLocaleString()}</td>
-                        <td className="px-2 py-3 text-xs" style={{ color: pnl >= 0 ? 'var(--light-blue-400)' : 'var(--orange-400)' }}>
+                        <td className="px-2 py-3 text-xs" style={{ color: pnl >= 0 ? 'var(--green-400)' : 'var(--red-400)' }}>
                           {pnl >= 0 ? "+" : ""}{Math.round(pnl).toLocaleString()} ({pnlPct >= 0 ? "+" : ""}{pnlPct.toFixed(1)}%)
                         </td>
                         <td className="px-2 py-3">
@@ -379,7 +385,7 @@ export function SandboxPage({
                                     step="0.01"
                                     value={qtyDraft}
                                     onChange={(event) => {
-                                      const nextValue = event.target.value;
+                                      const nextValue = event.target.value.replace(/^-+/, "");
                                       setTradeQtyDrafts((prev) => ({ ...prev, [holding.assetId]: nextValue }));
                                     }}
                                     className="w-16 rounded-lg px-2 py-1.5 text-xs"
@@ -427,57 +433,116 @@ export function SandboxPage({
                                   </button>
                                 </div>
 
-                                <p className="text-xs mb-2" style={{ color: 'var(--black-400)' }}>Auto-sell limit</p>
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    step="1"
-                                    value={draftValue}
-                                    onChange={(event) => {
-                                      const nextValue = event.target.value;
-                                      setLimitDrafts((prev) => ({ ...prev, [holding.assetId]: nextValue }));
-                                    }}
-                                    placeholder="Target YQ"
-                                    className="w-28 rounded-lg px-2 py-1.5 text-xs"
-                                    style={{ backgroundColor: 'white', border: '1px solid var(--black-100)', color: 'var(--black-500)' }}
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const parsed = Number.parseFloat(limitDrafts[holding.assetId] ?? draftValue);
-                                      if (Number.isFinite(parsed) && parsed > 0) {
-                                        onSetSellLimit(holding.assetId, parsed);
-                                      }
-                                    }}
-                                    className="rounded-lg px-2 py-1.5 text-xs font-medium cursor-pointer transition-all hover:brightness-95"
-                                    style={{ backgroundColor: 'var(--light-blue-100)', color: 'var(--black-500)', border: '1px solid var(--light-blue-300)' }}
-                                  >
-                                    Save
-                                  </button>
-                                  {currentLimit != null && (
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        onSetSellLimit(holding.assetId, null);
-                                        setLimitDrafts((prev) => ({ ...prev, [holding.assetId]: "" }));
-                                      }}
-                                      className="rounded-lg px-2 py-1.5 text-xs font-medium cursor-pointer transition-all hover:brightness-95"
-                                      style={{ backgroundColor: 'var(--orange-50)', color: 'var(--black-500)', border: '1px solid var(--orange-200)' }}
-                                    >
-                                      Clear
-                                    </button>
-                                  )}
+                                <div className="grid gap-2 md:grid-cols-2">
+                                  <div>
+                                    <p className="text-xs mb-2" style={{ color: 'var(--black-400)' }}>Auto-sell limit</p>
+                                    <div className="flex items-center gap-1 overflow-x-auto whitespace-nowrap">
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        step="1"
+                                        value={draftValue}
+                                        onChange={(event) => {
+                                          const nextValue = event.target.value.replace(/^-+/, "");
+                                          setLimitDrafts((prev) => ({ ...prev, [holding.assetId]: nextValue }));
+                                        }}
+                                        placeholder="Target YQ"
+                                        className="w-18 rounded-lg px-2 py-1.5 text-xs"
+                                        style={{ backgroundColor: 'white', border: '1px solid var(--black-100)', color: 'var(--black-500)' }}
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const parsed = Number.parseFloat(limitDrafts[holding.assetId] ?? draftValue);
+                                          if (Number.isFinite(parsed) && parsed > 0) {
+                                            onSetSellLimit(holding.assetId, parsed);
+                                          }
+                                        }}
+                                        className="rounded-lg px-2 py-1.5 text-xs font-medium cursor-pointer transition-all hover:brightness-95"
+                                        style={{ backgroundColor: 'var(--light-blue-100)', color: 'var(--black-500)', border: '1px solid var(--light-blue-300)' }}
+                                      >
+                                        Save
+                                      </button>
+                                      {currentLimit != null && (
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            onSetSellLimit(holding.assetId, null);
+                                            setLimitDrafts((prev) => ({ ...prev, [holding.assetId]: "" }));
+                                          }}
+                                          className="rounded-lg px-2 py-1.5 text-xs font-medium cursor-pointer transition-all hover:brightness-95"
+                                          style={{ backgroundColor: 'var(--orange-50)', color: 'var(--black-500)', border: '1px solid var(--orange-200)' }}
+                                        >
+                                          Clear
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div>
+                                    <p className="text-xs mb-2" style={{ color: 'var(--black-400)' }}>Auto-buy limit</p>
+                                    <div className="flex items-center gap-1 overflow-x-auto whitespace-nowrap">
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        step="1"
+                                        value={buyDraftValue}
+                                        onChange={(event) => {
+                                          const nextValue = event.target.value.replace(/^-+/, "");
+                                          setBuyLimitDrafts((prev) => ({ ...prev, [holding.assetId]: nextValue }));
+                                        }}
+                                        placeholder="Target YQ"
+                                        className="w-18 rounded-lg px-2 py-1.5 text-xs"
+                                        style={{ backgroundColor: 'white', border: '1px solid var(--black-100)', color: 'var(--black-500)' }}
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const parsed = Number.parseFloat(buyLimitDrafts[holding.assetId] ?? buyDraftValue);
+                                          if (Number.isFinite(parsed) && parsed > 0) {
+                                            onSetBuyLimit(holding.assetId, parsed);
+                                          }
+                                        }}
+                                        className="rounded-lg px-2 py-1.5 text-xs font-medium cursor-pointer transition-all hover:brightness-95"
+                                        style={{ backgroundColor: 'var(--light-blue-100)', color: 'var(--black-500)', border: '1px solid var(--light-blue-300)' }}
+                                      >
+                                        Save
+                                      </button>
+                                      {currentBuyLimit != null && (
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            onSetBuyLimit(holding.assetId, null);
+                                            setBuyLimitDrafts((prev) => ({ ...prev, [holding.assetId]: "" }));
+                                          }}
+                                          className="rounded-lg px-2 py-1.5 text-xs font-medium cursor-pointer transition-all hover:brightness-95"
+                                          style={{ backgroundColor: 'var(--orange-50)', color: 'var(--black-500)', border: '1px solid var(--orange-200)' }}
+                                        >
+                                          Clear
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
 
                               <div className="rounded-lg p-2" style={{ backgroundColor: 'white', border: '1px solid var(--black-100)' }}>
-                                <p className="text-[11px] mb-1" style={{ color: 'var(--black-300)' }}>Current limit</p>
-                                <p className="text-xs" style={{ color: 'var(--black-500)' }}>
-                                  {currentLimit != null ? `${Math.round(currentLimit).toLocaleString()} YQ` : "No limit"}
-                                </p>
-                                <p className="text-[11px] mt-1" style={{ color: 'var(--black-400)' }}>
-                                  Trigger on target.
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div>
+                                    <p className="text-[11px] mb-1" style={{ color: 'var(--black-300)' }}>Sell limit</p>
+                                    <p className="text-xs" style={{ color: 'var(--black-500)' }}>
+                                      {currentLimit != null ? `${Math.round(currentLimit).toLocaleString()} YQ` : "No limit"}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-[11px] mb-1" style={{ color: 'var(--black-300)' }}>Buy limit</p>
+                                    <p className="text-xs" style={{ color: 'var(--black-500)' }}>
+                                      {currentBuyLimit != null ? `${Math.round(currentBuyLimit).toLocaleString()} YQ` : "No limit"}
+                                    </p>
+                                  </div>
+                                </div>
+                                <p className="text-[11px] mt-2" style={{ color: 'var(--black-400)' }}>
+                                  Sell triggers above target, buy below target.
                                 </p>
                               </div>
                             </div>
@@ -626,7 +691,7 @@ export function SandboxPage({
             <p className="text-sm mb-1" style={{ color: 'var(--black-400)' }}>
               Current value: {Math.round(totalAccountValue).toLocaleString()} YQ
             </p>
-            <p className="text-sm" style={{ color: sessionReturnPct >= 0 ? 'var(--light-blue-400)' : 'var(--orange-400)' }}>
+            <p className="text-sm" style={{ color: sessionReturnPct >= 0 ? 'var(--green-400)' : 'var(--red-400)' }}>
               Session return: {sessionReturnPct >= 0 ? "+" : ""}{sessionReturnPct.toFixed(2)}%
             </p>
           </div>

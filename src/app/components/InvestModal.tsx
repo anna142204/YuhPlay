@@ -302,7 +302,7 @@ export function InvestModal({
                 <p 
                   className="text-sm"
                   style={{ 
-                    color: unitPrice < selectedAsset.basePrice ? 'var(--orange-400)' : 'var(--light-blue-500)'
+                    color: unitPrice < selectedAsset.basePrice ? 'var(--red-400)' : 'var(--green-400)'
                   }}
                 >
                   {((unitPrice - selectedAsset.basePrice) / selectedAsset.basePrice * 100).toFixed(1)}% vs base
@@ -500,7 +500,7 @@ export function InvestModal({
                       <p 
                         className="text-xs"
                         style={{ 
-                          color: perf < 0 ? 'var(--orange-400)' : 'var(--light-blue-500)'
+                          color: perf < 0 ? 'var(--red-400)' : 'var(--green-400)'
                         }}
                       >
                         {perf >= 0 ? '+' : ''}{perf.toFixed(1)}% vs base

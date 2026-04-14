@@ -27,6 +27,7 @@ interface Holding {
   quantity: number;
   averagePrice: number;
   sellLimitPrice?: number | null;
+  buyLimitPrice?: number | null;
 }
 
 export default function App() {
@@ -457,6 +458,67 @@ export default function App() {
     }
   }, [marketPrices, sandboxHoldings]);
 
+  useEffect(() => {
+    const autoBuyOrders = Object.values(sandboxHoldings).filter((holding) => {
+      if (holding.buyLimitPrice == null) {
+        return false;
+      }
+
+      const livePrice = marketPrices[holding.assetId] ?? holding.averagePrice;
+      return livePrice <= holding.buyLimitPrice;
+    });
+
+    if (autoBuyOrders.length === 0) {
+      return;
+    }
+
+    let spent = 0;
+    const boughtLabels: string[] = [];
+
+    setSandboxHoldings((previous) => {
+      const next = { ...previous };
+
+      autoBuyOrders.forEach((holding) => {
+        const current = next[holding.assetId];
+        if (!current) {
+          return;
+        }
+
+        const executionPrice = Math.round(holding.buyLimitPrice ?? marketPrices[holding.assetId] ?? holding.averagePrice);
+        if (sandboxBalance - spent < executionPrice) {
+          return;
+        }
+
+        const newQuantity = current.quantity + 1;
+        const newAverage = (current.averagePrice * current.quantity + executionPrice) / newQuantity;
+
+        next[holding.assetId] = {
+          ...current,
+          quantity: newQuantity,
+          averagePrice: newAverage,
+          buyLimitPrice: null,
+        };
+
+        spent += executionPrice;
+        boughtLabels.push(`1 ${current.name} at ${executionPrice} YQ`);
+      });
+
+      return next;
+    });
+
+    if (spent > 0) {
+      setSandboxBalance((previous) => previous - spent);
+    }
+
+    boughtLabels.forEach((label) => {
+      pushSandboxAction(`Auto-bought ${label} (limit reached)`);
+    });
+
+    if (boughtLabels.length > 0) {
+      setMascotMessage("An auto-buy limit was reached. The Sandbox position was bought automatically.");
+    }
+  }, [marketPrices, sandboxBalance, sandboxHoldings]);
+
   // Get current mission based on progress
   const getCurrentMission = () => {
     const unit1 = unitsProgress[0];
@@ -813,12 +875,46 @@ export default function App() {
     }
   };
 
+  const handleSetSandboxBuyLimit = (assetId: string, limitPrice: number | null) => {
+    const asset = ASSETS.find((item) => item.id === assetId);
+
+    setSandboxHoldings((prev) => {
+      const current = prev[assetId];
+      if (!current) {
+        return prev;
+      }
+
+      if (limitPrice == null) {
+        const { buyLimitPrice: _removed, ...rest } = current;
+        return {
+          ...prev,
+          [assetId]: rest,
+        };
+      }
+
+      return {
+        ...prev,
+        [assetId]: {
+          ...current,
+          buyLimitPrice: limitPrice,
+        },
+      };
+    });
+
+    if (asset) {
+      if (limitPrice == null) {
+        pushSandboxAction(`Removed auto-buy limit for ${asset.name}`);
+      } else {
+        pushSandboxAction(`Set auto-buy limit for ${asset.name} at ${Math.round(limitPrice)} YQ`);
+      }
+    }
+  };
+
   const handleTrade = (asset: Asset, quantity: number, action: "buy" | "sell", unitPrice: number) => {
     lastActionAtRef.current = Date.now();
 
     if (tradeContext === "sandbox") {
       handleSandboxTrade(asset, quantity, action, unitPrice);
-      setInvestModalOpen(false);
       return;
     }
 
@@ -1070,6 +1166,7 @@ export default function App() {
             onSetSandboxBudget={handleSetSandboxBudget}
             onDirectTrade={handleSandboxDirectTrade}
             onSetSellLimit={handleSetSandboxSellLimit}
+            onSetBuyLimit={handleSetSandboxBuyLimit}
             onOpenInvest={() => {
               setTradeContext("sandbox");
               setInvestModalOpen(true);
