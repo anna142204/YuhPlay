@@ -1,7 +1,45 @@
 import { Progress } from "./ui/progress";
 import { ArrowRight } from "lucide-react";
 
-const mascotImg = new URL("../../assets/160b9e358a268764c5321a85b6cb2558abeea8c9.png", import.meta.url).href;
+const mascotImages = {
+  positive: new URL("../../assets/yuh-mascot-1.png", import.meta.url).href,
+  negative: new URL("../../assets/yuh-mascot-2.png", import.meta.url).href,
+  welcoming: new URL("../../assets/yuh-mascot-3.png", import.meta.url).href,
+};
+
+function getMascotImage(message: string) {
+  const normalized = message.toLowerCase();
+
+  if (
+    normalized.includes("drawdown") ||
+    normalized.includes("loss") ||
+    normalized.includes("risk") ||
+    normalized.includes("volatile") ||
+    normalized.includes("caution") ||
+    normalized.includes("low liquidity") ||
+    normalized.includes("reduce") ||
+    normalized.includes("patience") ||
+    normalized.includes("down")
+  ) {
+    return mascotImages.negative;
+  }
+
+  if (
+    normalized.includes("welcome") ||
+    normalized.includes("start here") ||
+    normalized.includes("here to help") ||
+    normalized.includes("pick a scenario") ||
+    normalized.includes("open invest") ||
+    normalized.includes("click the invest") ||
+    normalized.includes("good start") ||
+    normalized.includes("fresh start") ||
+    normalized.includes("guide")
+  ) {
+    return mascotImages.welcoming;
+  }
+
+  return mascotImages.positive;
+}
 
 interface MissionCardProps {
   missionNumber: number;
@@ -118,6 +156,8 @@ interface MascotProps {
 }
 
 export function Mascot({ message }: MascotProps) {
+  const mascotImg = getMascotImage(message);
+
   return (
     <div className="relative h-[210px] w-full max-w-[290px] overflow-visible">
       <div

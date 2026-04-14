@@ -26,6 +26,7 @@ interface Holding {
   sector: string;
   quantity: number;
   averagePrice: number;
+  sellLimitPrice?: number | null;
 }
 
 export default function App() {
@@ -413,6 +414,49 @@ export default function App() {
     }
   }, [marketPrices, holdings, hasPortfolioData]);
 
+  useEffect(() => {
+    const autoSellOrders = Object.values(sandboxHoldings).filter((holding) => {
+      if (holding.sellLimitPrice == null) {
+        return false;
+      }
+
+      const livePrice = marketPrices[holding.assetId] ?? holding.averagePrice;
+      return livePrice >= holding.sellLimitPrice;
+    });
+
+    if (autoSellOrders.length === 0) {
+      return;
+    }
+
+    let proceeds = 0;
+    const soldLabels: string[] = [];
+
+    setSandboxHoldings((previous) => {
+      const next = { ...previous };
+
+      autoSellOrders.forEach((holding) => {
+        const executionPrice = Math.round(holding.sellLimitPrice ?? marketPrices[holding.assetId] ?? holding.averagePrice);
+        proceeds += executionPrice * holding.quantity;
+        soldLabels.push(`${holding.quantity.toFixed(2)} ${holding.name} at ${executionPrice} YQ`);
+        delete next[holding.assetId];
+      });
+
+      return next;
+    });
+
+    if (proceeds > 0) {
+      setSandboxBalance((previous) => previous + proceeds);
+    }
+
+    soldLabels.forEach((label) => {
+      pushSandboxAction(`Auto-sold ${label} (limit reached)`);
+    });
+
+    if (soldLabels.length > 0) {
+      setMascotMessage("A sell limit was reached. The Sandbox position was sold automatically.");
+    }
+  }, [marketPrices, sandboxHoldings]);
+
   // Get current mission based on progress
   const getCurrentMission = () => {
     const unit1 = unitsProgress[0];
@@ -651,84 +695,134 @@ export default function App() {
     setInvestModalOpen(true);
   };
 
-  const handleTrade = (asset: Asset, quantity: number, action: "buy" | "sell", unitPrice: number) => {
-    lastActionAtRef.current = Date.now();
+  const handleSandboxTrade = (asset: Asset, quantity: number, action: "buy" | "sell", unitPrice: number) => {
     const total = Math.round(unitPrice * quantity);
 
+    if (action === "buy") {
+      if (total > sandboxBalance) {
+        return;
+      }
+
+      setSandboxBalance((prev) => prev - total);
+      setSandboxHoldings((prev) => {
+        const current = prev[asset.id];
+        if (!current) {
+          return {
+            ...prev,
+            [asset.id]: {
+              assetId: asset.id,
+              name: asset.name,
+              sector: asset.sector,
+              quantity,
+              averagePrice: unitPrice,
+            },
+          };
+        }
+
+        const mergedQuantity = current.quantity + quantity;
+        const mergedAverage = (current.averagePrice * current.quantity + unitPrice * quantity) / mergedQuantity;
+
+        return {
+          ...prev,
+          [asset.id]: {
+            ...current,
+            quantity: mergedQuantity,
+            averagePrice: mergedAverage,
+          },
+        };
+      });
+
+      setMascotMessage(`Sandbox buy executed: ${asset.name}.`);
+      pushSandboxAction(`Bought ${quantity} ${asset.name} at ${Math.round(unitPrice)} YQ`);
+      return;
+    }
+
+    const currentHolding = sandboxHoldings[asset.id];
+    if (!currentHolding || currentHolding.quantity < quantity) {
+      return;
+    }
+
+    setSandboxBalance((prev) => prev + total);
+    setSandboxHoldings((prev) => {
+      const current = prev[asset.id];
+      if (!current) {
+        return prev;
+      }
+
+      const remaining = current.quantity - quantity;
+      if (remaining <= 0) {
+        const { [asset.id]: _removed, ...rest } = prev;
+        return rest;
+      }
+
+      return {
+        ...prev,
+        [asset.id]: {
+          ...current,
+          quantity: remaining,
+        },
+      };
+    });
+
+    setMascotMessage(`Sandbox sell executed on ${asset.name}.`);
+    pushSandboxAction(`Sold ${quantity} ${asset.name} at ${Math.round(unitPrice)} YQ`);
+  };
+
+  const handleSandboxDirectTrade = (assetId: string, action: "buy" | "sell", quantity = 1) => {
+    const asset = ASSETS.find((item) => item.id === assetId);
+    if (!asset) {
+      return;
+    }
+
+    const livePrice = marketPrices[asset.id] ?? asset.basePrice;
+    handleSandboxTrade(asset, quantity, action, livePrice);
+  };
+
+  const handleSetSandboxSellLimit = (assetId: string, limitPrice: number | null) => {
+    const asset = ASSETS.find((item) => item.id === assetId);
+
+    setSandboxHoldings((prev) => {
+      const current = prev[assetId];
+      if (!current) {
+        return prev;
+      }
+
+      if (limitPrice == null) {
+        const { sellLimitPrice: _removed, ...rest } = current;
+        return {
+          ...prev,
+          [assetId]: rest,
+        };
+      }
+
+      return {
+        ...prev,
+        [assetId]: {
+          ...current,
+          sellLimitPrice: limitPrice,
+        },
+      };
+    });
+
+    if (asset) {
+      if (limitPrice == null) {
+        pushSandboxAction(`Removed auto-sell limit for ${asset.name}`);
+      } else {
+        pushSandboxAction(`Set auto-sell limit for ${asset.name} at ${Math.round(limitPrice)} YQ`);
+      }
+    }
+  };
+
+  const handleTrade = (asset: Asset, quantity: number, action: "buy" | "sell", unitPrice: number) => {
+    lastActionAtRef.current = Date.now();
+
     if (tradeContext === "sandbox") {
-      if (action === "buy") {
-        if (total > sandboxBalance) {
-          return;
-        }
-
-        setSandboxBalance((prev) => prev - total);
-        setSandboxHoldings((prev) => {
-          const current = prev[asset.id];
-          if (!current) {
-            return {
-              ...prev,
-              [asset.id]: {
-                assetId: asset.id,
-                name: asset.name,
-                sector: asset.sector,
-                quantity,
-                averagePrice: unitPrice,
-              },
-            };
-          }
-
-          const mergedQuantity = current.quantity + quantity;
-          const mergedAverage = (current.averagePrice * current.quantity + unitPrice * quantity) / mergedQuantity;
-
-          return {
-            ...prev,
-            [asset.id]: {
-              ...current,
-              quantity: mergedQuantity,
-              averagePrice: mergedAverage,
-            },
-          };
-        });
-
-        setMascotMessage(`Sandbox buy executed: ${asset.name}.`);
-        pushSandboxAction(`Bought ${quantity} ${asset.name} at ${Math.round(unitPrice)} YQ`);
-      }
-
-      if (action === "sell") {
-        const currentHolding = sandboxHoldings[asset.id];
-        if (!currentHolding || currentHolding.quantity < quantity) {
-          return;
-        }
-
-        setSandboxBalance((prev) => prev + total);
-        setSandboxHoldings((prev) => {
-          const current = prev[asset.id];
-          if (!current) {
-            return prev;
-          }
-
-          const remaining = current.quantity - quantity;
-          if (remaining <= 0) {
-            const { [asset.id]: _removed, ...rest } = prev;
-            return rest;
-          }
-
-          return {
-            ...prev,
-            [asset.id]: {
-              ...current,
-              quantity: remaining,
-            },
-          };
-        });
-
-        setMascotMessage(`Sandbox sell executed on ${asset.name}.`);
-        pushSandboxAction(`Sold ${quantity} ${asset.name} at ${Math.round(unitPrice)} YQ`);
-      }
-
+      handleSandboxTrade(asset, quantity, action, unitPrice);
       setInvestModalOpen(false);
       return;
     }
+
+    const total = Math.round(unitPrice * quantity);
 
     if (action === "buy") {
       if (total > balance) {
@@ -974,6 +1068,8 @@ export default function App() {
             onScenarioChange={handleScenarioChange}
             onResetSession={handleResetSandboxSession}
             onSetSandboxBudget={handleSetSandboxBudget}
+            onDirectTrade={handleSandboxDirectTrade}
+            onSetSellLimit={handleSetSandboxSellLimit}
             onOpenInvest={() => {
               setTradeContext("sandbox");
               setInvestModalOpen(true);

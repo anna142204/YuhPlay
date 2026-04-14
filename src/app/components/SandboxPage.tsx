@@ -1,9 +1,13 @@
+import { Fragment, useState } from "react";
+
 interface SandboxPageProps {
   selectedScenario: "balanced" | "bull" | "bear" | "volatile";
   onScenarioChange: (scenario: "balanced" | "bull" | "bear" | "volatile") => void;
   onResetSession: () => void;
   onSetSandboxBudget: (amount: number) => void;
   onOpenInvest: () => void;
+  onDirectTrade: (assetId: string, action: "buy" | "sell", quantity?: number) => void;
+  onSetSellLimit: (assetId: string, limitPrice: number | null) => void;
   totalAccountValue: number;
   balance: number;
   portfolioValue: number;
@@ -19,6 +23,7 @@ interface SandboxPageProps {
     sector: string;
     quantity: number;
     averagePrice: number;
+    sellLimitPrice?: number | null;
   }>;
 }
 
@@ -74,6 +79,8 @@ export function SandboxPage({
   onResetSession,
   onSetSandboxBudget,
   onOpenInvest,
+  onDirectTrade,
+  onSetSellLimit,
   totalAccountValue,
   balance,
   portfolioValue,
@@ -85,6 +92,9 @@ export function SandboxPage({
   marketPrices,
   holdings,
 }: SandboxPageProps) {
+  const [limitDrafts, setLimitDrafts] = useState<Record<string, string>>({});
+  const [tradeQtyDrafts, setTradeQtyDrafts] = useState<Record<string, string>>({});
+  const [expandedAssetId, setExpandedAssetId] = useState<string | null>(null);
   const cashRatio = totalAccountValue > 0 ? (balance / totalAccountValue) * 100 : 0;
   const sessionReturnPct = sessionStartValue > 0
     ? ((totalAccountValue - sessionStartValue) / sessionStartValue) * 100
@@ -217,6 +227,12 @@ export function SandboxPage({
       {/* Portfolio Section */}
       <section className="rounded-xl p-6 mb-6" style={{ backgroundColor: 'white', border: '1px solid var(--black-100)' }}>
         <h3 className="text-lg mb-4 font-medium" style={{ color: 'var(--black-500)' }}>Portfolio</h3>
+
+        <div className="rounded-xl px-4 py-3 mb-5" style={{ backgroundColor: 'var(--blue-50)', border: '1px solid var(--black-100)' }}>
+          <p className="text-sm" style={{ color: 'var(--black-500)' }}>
+            Trade directly from the table or set an auto-sell limit that triggers when the market price reaches it.
+          </p>
+        </div>
         
         {/* Portfolio KPIs */}
         <div className="grid gap-3 md:grid-cols-4 mb-6">
@@ -294,22 +310,23 @@ export function SandboxPage({
           </div>
         )}
 
-        {/* Positions Table */}
+        {/* Positions */}
         {holdings.length === 0 ? (
           <p className="text-sm" style={{ color: 'var(--black-400)' }}>
             No positions yet. Click "Open invest panel" above to start building your portfolio.
           </p>
         ) : (
-          <div className="overflow-x-auto rounded-lg" style={{ border: '1px solid var(--black-100)' }}>
-            <table className="w-full min-w-[720px]">
+          <div className="overflow-hidden rounded-xl" style={{ border: '1px solid var(--black-100)' }}>
+            <table className="w-full table-fixed">
               <thead>
-                <tr className="text-left text-xs" style={{ color: 'var(--black-300)', backgroundColor: 'var(--blue-50)', borderBottom: '1px solid var(--black-100)' }}>
-                  <th className="px-4 py-2">Asset</th>
-                  <th className="px-4 py-2">Qty</th>
-                  <th className="px-4 py-2">Avg price</th>
-                  <th className="px-4 py-2">Live price</th>
-                  <th className="px-4 py-2">Market value</th>
-                  <th className="px-4 py-2">Unrealized P/L</th>
+                <tr className="text-left text-xs uppercase tracking-wide" style={{ color: 'var(--black-300)', backgroundColor: 'var(--blue-50)', borderBottom: '1px solid var(--black-100)' }}>
+                  <th className="px-2 py-2 w-[22%]">Asset</th>
+                  <th className="px-2 py-2 w-[10%]">Qty</th>
+                  <th className="px-2 py-2 w-[14%]">Avg</th>
+                  <th className="px-2 py-2 w-[14%]">Live</th>
+                  <th className="px-2 py-2 w-[14%]">Value</th>
+                  <th className="px-2 py-2 w-[16%]">P/L</th>
+                  <th className="px-2 py-2 w-[10%]">Open</th>
                 </tr>
               </thead>
               <tbody>
@@ -319,18 +336,155 @@ export function SandboxPage({
                   const costBasis = holding.averagePrice * holding.quantity;
                   const pnl = marketValue - costBasis;
                   const pnlPct = costBasis > 0 ? (pnl / costBasis) * 100 : 0;
+                  const currentLimit = holding.sellLimitPrice ?? null;
+                  const draftValue = limitDrafts[holding.assetId] ?? (currentLimit != null ? String(Math.round(currentLimit)) : "");
+                  const qtyDraft = tradeQtyDrafts[holding.assetId] ?? "1";
+                  const parsedQty = Number.parseFloat(qtyDraft);
+                  const safeQty = Number.isFinite(parsedQty) && parsedQty > 0 ? parsedQty : 1;
+                  const isOpen = expandedAssetId === holding.assetId;
 
                   return (
-                    <tr key={holding.assetId} style={{ borderTop: '1px solid var(--black-50)' }}>
-                      <td className="px-4 py-3 text-sm" style={{ color: 'var(--black-500)' }}>{holding.name}</td>
-                      <td className="px-4 py-3 text-sm" style={{ color: 'var(--black-400)' }}>{holding.quantity.toFixed(2)}</td>
-                      <td className="px-4 py-3 text-sm" style={{ color: 'var(--black-400)' }}>{Math.round(holding.averagePrice).toLocaleString()}</td>
-                      <td className="px-4 py-3 text-sm" style={{ color: 'var(--black-400)' }}>{Math.round(livePrice).toLocaleString()}</td>
-                      <td className="px-4 py-3 text-sm" style={{ color: 'var(--black-500)' }}>{Math.round(marketValue).toLocaleString()}</td>
-                      <td className="px-4 py-3 text-sm" style={{ color: pnl >= 0 ? 'var(--light-blue-400)' : 'var(--orange-400)' }}>
-                        {pnl >= 0 ? "+" : ""}{Math.round(pnl).toLocaleString()} ({pnlPct >= 0 ? "+" : ""}{pnlPct.toFixed(1)}%)
-                      </td>
-                    </tr>
+                    <Fragment key={holding.assetId}>
+                      <tr style={{ borderTop: '1px solid var(--black-50)' }}>
+                        <td className="px-2 py-3 text-xs truncate" style={{ color: 'var(--black-500)' }}>{holding.name}</td>
+                        <td className="px-2 py-3 text-xs" style={{ color: 'var(--black-400)' }}>{holding.quantity.toFixed(2)}</td>
+                        <td className="px-2 py-3 text-xs" style={{ color: 'var(--black-400)' }}>{Math.round(holding.averagePrice).toLocaleString()}</td>
+                        <td className="px-2 py-3 text-xs" style={{ color: 'var(--black-400)' }}>{Math.round(livePrice).toLocaleString()}</td>
+                        <td className="px-2 py-3 text-xs" style={{ color: 'var(--black-500)' }}>{Math.round(marketValue).toLocaleString()}</td>
+                        <td className="px-2 py-3 text-xs" style={{ color: pnl >= 0 ? 'var(--light-blue-400)' : 'var(--orange-400)' }}>
+                          {pnl >= 0 ? "+" : ""}{Math.round(pnl).toLocaleString()} ({pnlPct >= 0 ? "+" : ""}{pnlPct.toFixed(1)}%)
+                        </td>
+                        <td className="px-2 py-3">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedAssetId(isOpen ? null : holding.assetId)}
+                            className="rounded-lg px-2 py-1.5 text-xs font-medium cursor-pointer transition-all hover:brightness-95 whitespace-nowrap"
+                            style={{ backgroundColor: isOpen ? 'var(--orange-100)' : 'white', color: 'var(--black-500)', border: '1px solid var(--black-100)' }}
+                          >
+                            {isOpen ? "Close" : "Open"}
+                          </button>
+                        </td>
+                      </tr>
+
+                      {isOpen && (
+                        <tr style={{ backgroundColor: 'var(--blue-50)', borderTop: '1px solid var(--black-50)' }}>
+                          <td colSpan={7} className="px-3 py-3">
+                            <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_270px] items-start">
+                              <div>
+                                <p className="text-xs mb-2" style={{ color: 'var(--black-400)' }}>Trade quantity</p>
+                                <div className="flex items-center gap-1 mb-3 overflow-x-auto whitespace-nowrap">
+                                  <input
+                                    type="number"
+                                    min="0.01"
+                                    step="0.01"
+                                    value={qtyDraft}
+                                    onChange={(event) => {
+                                      const nextValue = event.target.value;
+                                      setTradeQtyDrafts((prev) => ({ ...prev, [holding.assetId]: nextValue }));
+                                    }}
+                                    className="w-16 rounded-lg px-2 py-1.5 text-xs"
+                                    style={{ backgroundColor: 'white', border: '1px solid var(--black-100)', color: 'var(--black-500)' }}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => onDirectTrade(holding.assetId, "buy", safeQty)}
+                                    className="rounded-lg px-2 py-1.5 text-xs font-medium cursor-pointer transition-all hover:brightness-95"
+                                    style={{ backgroundColor: 'var(--orange-400)', color: 'white', border: '1px solid var(--orange-500)' }}
+                                  >
+                                    Buy
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => onDirectTrade(holding.assetId, "sell", Math.min(safeQty, holding.quantity))}
+                                    className="rounded-lg px-2 py-1.5 text-xs font-medium cursor-pointer transition-all hover:brightness-95"
+                                    style={{ backgroundColor: 'white', color: 'var(--black-500)', border: '1px solid var(--black-100)' }}
+                                  >
+                                    Sell
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => onDirectTrade(holding.assetId, "sell", Math.max(1, Math.ceil(holding.quantity / 3)))}
+                                    className="rounded-lg px-2 py-1.5 text-xs font-medium cursor-pointer transition-all hover:brightness-95"
+                                    style={{ backgroundColor: 'white', color: 'var(--black-500)', border: '1px solid var(--black-100)' }}
+                                  >
+                                    Sell 33%
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => onDirectTrade(holding.assetId, "sell", Math.max(1, Math.ceil((holding.quantity * 2) / 3)))}
+                                    className="rounded-lg px-2 py-1.5 text-xs font-medium cursor-pointer transition-all hover:brightness-95"
+                                    style={{ backgroundColor: 'white', color: 'var(--black-500)', border: '1px solid var(--black-100)' }}
+                                  >
+                                    Sell 67%
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => onDirectTrade(holding.assetId, "sell", holding.quantity)}
+                                    className="rounded-lg px-2 py-1.5 text-xs font-medium cursor-pointer transition-all hover:brightness-95"
+                                    style={{ backgroundColor: 'var(--orange-50)', color: 'var(--black-500)', border: '1px solid var(--orange-200)' }}
+                                  >
+                                    Sell all
+                                  </button>
+                                </div>
+
+                                <p className="text-xs mb-2" style={{ color: 'var(--black-400)' }}>Auto-sell limit</p>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    value={draftValue}
+                                    onChange={(event) => {
+                                      const nextValue = event.target.value;
+                                      setLimitDrafts((prev) => ({ ...prev, [holding.assetId]: nextValue }));
+                                    }}
+                                    placeholder="Target YQ"
+                                    className="w-28 rounded-lg px-2 py-1.5 text-xs"
+                                    style={{ backgroundColor: 'white', border: '1px solid var(--black-100)', color: 'var(--black-500)' }}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const parsed = Number.parseFloat(limitDrafts[holding.assetId] ?? draftValue);
+                                      if (Number.isFinite(parsed) && parsed > 0) {
+                                        onSetSellLimit(holding.assetId, parsed);
+                                      }
+                                    }}
+                                    className="rounded-lg px-2 py-1.5 text-xs font-medium cursor-pointer transition-all hover:brightness-95"
+                                    style={{ backgroundColor: 'var(--light-blue-100)', color: 'var(--black-500)', border: '1px solid var(--light-blue-300)' }}
+                                  >
+                                    Save
+                                  </button>
+                                  {currentLimit != null && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        onSetSellLimit(holding.assetId, null);
+                                        setLimitDrafts((prev) => ({ ...prev, [holding.assetId]: "" }));
+                                      }}
+                                      className="rounded-lg px-2 py-1.5 text-xs font-medium cursor-pointer transition-all hover:brightness-95"
+                                      style={{ backgroundColor: 'var(--orange-50)', color: 'var(--black-500)', border: '1px solid var(--orange-200)' }}
+                                    >
+                                      Clear
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="rounded-lg p-2" style={{ backgroundColor: 'white', border: '1px solid var(--black-100)' }}>
+                                <p className="text-[11px] mb-1" style={{ color: 'var(--black-300)' }}>Current limit</p>
+                                <p className="text-xs" style={{ color: 'var(--black-500)' }}>
+                                  {currentLimit != null ? `${Math.round(currentLimit).toLocaleString()} YQ` : "No limit"}
+                                </p>
+                                <p className="text-[11px] mt-1" style={{ color: 'var(--black-400)' }}>
+                                  Trigger on target.
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
                   );
                 })}
               </tbody>

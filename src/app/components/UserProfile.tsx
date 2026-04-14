@@ -1,4 +1,4 @@
-import { User } from "lucide-react";
+const profileImage = new URL("../../assets/avatar.jpg", import.meta.url).href;
 
 interface UserProfileProps {
   xp: number;
@@ -14,7 +14,11 @@ export function UserProfile({ xp }: UserProfileProps) {
     <div className="flex flex-col items-center gap-6 p-6">
       {/* Avatar */}
       <div className="w-24 h-24 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-md" style={{ background: 'linear-gradient(135deg, var(--light-blue-300), var(--light-blue-400))' }}>
-        <div><User size={50} color="purple"/></div>
+        <img
+          src={profileImage}
+          alt="User profile"
+          className="h-full w-full object-cover"
+        />
       </div>
       
       {/* User Info */}
