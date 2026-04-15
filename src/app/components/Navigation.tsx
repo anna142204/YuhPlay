@@ -20,7 +20,7 @@ export function Navigation({ activeTab, onLearningPathClick, onSandboxClick, onT
   const items: NavigationItem[] = [
     { icon: <BookOpen className="w-5 h-5" />, label: "Learning path", active: activeTab === "learning", onClick: onLearningPathClick },
     { icon: <BookText className="w-5 h-5" />, label: "Theory details", active: activeTab === "theory", onClick: onTheoryClick },
-    { icon: <Compass className="w-5 h-5" />, label: "Sandbox", active: activeTab === "sandbox", onClick: onSandboxClick },
+    { icon: <Compass className="w-5 h-5" />, label: "Playground", active: activeTab === "sandbox", onClick: onSandboxClick },
     { icon: <Gift className="w-5 h-5" />, label: "Rewards", active: activeTab === "rewards", onClick: onRewardsClick },
   ];
 

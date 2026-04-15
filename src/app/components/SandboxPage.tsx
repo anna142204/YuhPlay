@@ -180,13 +180,13 @@ export function SandboxPage({
   return (
     <div className="px-6 py-8 max-w-6xl mx-auto">
       <header className="mb-8 rounded-2xl p-6" style={{ backgroundColor: 'rgba(255,255,255,0.72)', border: '1px solid var(--light-blue-300)' }}>
-        <h2 className="text-2xl mb-2" style={{ color: 'var(--black-500)' }}>Sandbox Lab</h2>
+        <h2 className="text-2xl mb-2" style={{ color: 'var(--black-500)' }}>Playground Lab</h2>
         <p style={{ color: 'var(--black-400)' }}>
           Practice freely: choose a market scenario, place trades, and compare results.
         </p>
         <div className="mt-4 rounded-xl p-4" style={{ backgroundColor: 'var(--blue-50)', border: '1px solid var(--black-100)' }}>
           <p className="text-sm" style={{ color: 'var(--black-500)' }}>
-            How to use Sandbox:
+            How to use Playground:
           </p>
           <p className="text-sm mt-1" style={{ color: 'var(--black-400)' }}>1. Pick a scenario.</p>
           <p className="text-sm" style={{ color: 'var(--black-400)' }}>2. Open invest panel and build a portfolio.</p>
@@ -199,7 +199,7 @@ export function SandboxPage({
             {SCENARIOS.find((scenario) => scenario.id === selectedScenario)?.label}
           </p>
           <p className="text-xs mt-1" style={{ color: 'var(--black-400)' }}>
-            You can change this in Sandbox settings below.
+            You can change this in Playground settings below.
           </p>
         </div>
       </header>
@@ -561,7 +561,7 @@ export function SandboxPage({
       {/* Settings - Collapsible */}
       <details className="rounded-xl p-5 mb-6" style={{ backgroundColor: 'white', border: '1px solid var(--black-100)' }}>
         <summary className="cursor-pointer text-md " style={{ color: 'var(--black-500)' }}>
-          Sandbox settings
+          Playground settings
         </summary>
         <div className="mt-4">
           <p className="text-xs mb-3" style={{ color: 'var(--black-400)' }}>SCENARIO</p>
@@ -622,7 +622,7 @@ export function SandboxPage({
             className="rounded-lg px-3 py-2 text-xs font-medium cursor-pointer"
             style={{ backgroundColor: 'var(--orange-300)', color: 'var(--orange-600)', border: '1px solid var(--orange-500)' }}
           >
-            Reset sandbox session
+            Reset playground session
           </button>
         </div>
       </details>
@@ -633,7 +633,7 @@ export function SandboxPage({
         </summary>
 
         <section className="rounded-xl p-4 mt-4" style={{ backgroundColor: 'var(--blue-50)', border: '1px solid var(--black-100)' }}>
-          <h3 className="mb-3" style={{ color: 'var(--black-500)' }}>Sandbox missions</h3>
+          <h3 className="mb-3" style={{ color: 'var(--black-500)' }}>Playground missions</h3>
           <div className="grid gap-3 md:grid-cols-3">
             {missions.map((mission) => (
               <article
