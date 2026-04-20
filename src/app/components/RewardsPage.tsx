@@ -129,13 +129,13 @@ export function RewardsPage({
         <h3 className="mb-4" style={{ color: 'var(--black-500)' }}>Achievement Rewards</h3>
         
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 auto-rows-fr">
           {achievements.map((achievement) => {
             const claimed = claimedRewards.includes(achievement.id);
             const state = claimed ? "claimed" : achievement.unlocked ? "claimable" : "locked";
             return (
-              <article key={achievement.id} className="rounded-xl p-4 h-[180px] flex flex-col" style={{ backgroundColor: 'var(--blue-50)', border: '1px solid var(--black-100)' }}>
-                <div className="flex items-center justify-between gap-2 mb-2">
+              <article key={achievement.id} className="rounded-xl p-5 h-full min-h-[250px] flex flex-col" style={{ backgroundColor: 'var(--blue-50)', border: '1px solid var(--black-100)' }}>
+                <div className="flex items-center justify-between gap-2 mb-3">
                   <h4 className="text-sm leading-tight" style={{ color: 'var(--black-500)' }}>{achievement.title}</h4>
                   <span
                     className="text-xs px-2 py-1 rounded-full whitespace-nowrap"
@@ -153,7 +153,7 @@ export function RewardsPage({
                   </span>
                 </div>
                 <p className="text-sm leading-snug" style={{ color: 'var(--black-400)' }}>{achievement.description}</p>
-                <p className="text-xs mt-3 mb-3" style={{ color: 'var(--black-400)' }}>
+                <p className="text-xs mt-4 mb-4" style={{ color: 'var(--black-400)' }}>
                   Reward: +{achievement.ycReward} YQ and +{achievement.xpReward} XP
                 </p>
                 <button
