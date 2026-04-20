@@ -1,101 +1,101 @@
 
 # Yuhlearn
 
-Application web de simulation et d'apprentissage autour de l'investissement.
+Web application for investment simulation and learning.
 
-Le projet combine:
-- un parcours pédagogique (Learning path)
-- un mode de simulation de marché (Playground)
-- un système de récompenses (Rewards)
-- une expérience gamifiée avec XP, missions et streak journalier
+The project combines:
+- a guided learning path
+- a market simulation mode (Playground)
+- a rewards system (Rewards)
+- a gamified experience with XP, missions, and daily streaks
 
-## Fonctionnalités principales
+## Main features
 
 ### 1) Learning path
-- progression par unités
-- étapes de cours + quiz
-- investissement guidé selon la progression
+- unit-based progression
+- lesson steps + quizzes
+- guided investing based on progress
 
 ### 2) Playground (simulation)
-- scénarios de marché (balanced, bull, bear, volatile)
-- achat/vente sur actifs avec portefeuille en direct
-- limites auto-sell / auto-buy
-- suivi de performance (retour, drawdown, diversification)
-- missions journalières avec rewards XP
+- market scenarios (balanced, bull, bear, volatile)
+- buy/sell assets with a live portfolio
+- auto-sell / auto-buy limits
+- performance tracking (return, drawdown, diversification)
+- daily missions with XP rewards
 
 ### 3) Rewards
-- achievements (streak et objectifs globaux)
-- rewards de complétion d'unités
-- boutique cosmétique
-- unlock promo en fin de parcours
+- achievements (streaks and global objectives)
+- unit completion rewards
+- cosmetic shop
+- promo unlock at the end of the learning path
 
-### 4) Profil et gamification
-- XP + niveau
-- barre de progression
-- streak journalier affiché dans la sidebar
-- persistance locale de l'état (localStorage)
+### 4) Profile and gamification
+- XP + level
+- progress bar
+- daily streak displayed in the sidebar
+- local state persistence (localStorage)
 
-## Stack technique
+## Technical stack
 
 - React 18
 - Vite 6
 - TypeScript
 - Tailwind CSS 4
-- Radix UI (composants UI)
-- Lucide React (icônes)
+- Radix UI (UI components)
+- Lucide React (icons)
 
-## Prérequis
+## Prerequisites
 
-- Node.js 18+ recommandé
+- Node.js 18+ recommended
 - npm
 
 ## Installation
 
-1. Installer les dépendances
+1. Install dependencies
 
 ```bash
 npm install
 ```
 
-2. Lancer le serveur de développement
+2. Start the development server
 
 ```bash
 npm run dev
 ```
 
-3. Ouvrir l'URL affichée dans le terminal (souvent http://localhost:5173)
+3. Open the URL shown in the terminal (usually http://localhost:5173)
 
-## Scripts disponibles
+## Available scripts
 
-- npm run dev : lance l'application en mode développement
-- npm run build : génère le build de production
+- npm run dev: starts the application in development mode
+- npm run build: generates a production build
 
-## Structure du projet
+## Project structure
 
-- src/app/App.tsx : orchestration globale, états, tabs, logique métier
-- src/app/components : composants UI et pages
-- src/app/data/assets.ts : données des actifs
-- src/styles : styles globaux, theme, fonts, Tailwind
+- src/app/App.tsx: global orchestration, state, tabs, and business logic
+- src/app/components: UI components and pages
+- src/app/data/assets.ts: asset data
+- src/styles: global styles, theme, fonts, Tailwind
 
-## Persistance et données
+## Persistence and data
 
-L'application sauvegarde une partie de l'état utilisateur en localStorage:
-- progression unités
-- portefeuille et soldes
-- rewards claimés
-- missions et cycle journalier
-- streak de connexion
+The application saves part of the user state in localStorage:
+- unit progression
+- portfolio and balances
+- claimed rewards
+- missions and daily cycle
+- login streak
 
 ## Notes
 
-- Le projet a été initialement bootstrapé depuis une base Figma Make puis fortement adapté.
+- The project was initially bootstrapped from a Figma Make base and then heavily customized.
 
-## Site publié
+## Published site
 
-- Lien de production: [YuhPlay](https://yuhlearn-simulator.netlify.app/)
+- Production link: [YuhPlay](https://yuhlearn-simulator.netlify.app/)
 
-## Crédits
+## Credits
 
-- Projet par Lovelace
+- Project by Lovelace
 
   
