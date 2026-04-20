@@ -25,7 +25,7 @@ export function Navigation({ activeTab, onLearningPathClick, onSandboxClick, onT
   ];
 
   return (
-    <nav className="flex flex-col gap-2 p-6">
+    <nav className="flex flex-col gap-3 px-6 py-3">
       {items.map((item, index) => (
         <button
           key={index}

@@ -1,10 +1,13 @@
+import { Flame } from "lucide-react";
+
 const profileImage = new URL("../../assets/avatar.jpg", import.meta.url).href;
 
 interface UserProfileProps {
   xp: number;
+  dailyStreak: number;
 }
 
-export function UserProfile({ xp }: UserProfileProps) {
+export function UserProfile({ xp, dailyStreak }: UserProfileProps) {
   const maxXp = 1000;
   const level = Math.floor(xp / 1000) + 1;
   const currentXp = xp % 1000;
@@ -28,7 +31,7 @@ export function UserProfile({ xp }: UserProfileProps) {
       </div>
       
       {/* XP Progress */}
-      <div className="w-full">
+      <div className="w-full p-1">
         <div className="flex items-center justify-between mb-2" style={{ color: 'var(--black-400)' }}>
           <span className="text-[16px] font-medium leading-none" style={{ color: 'var(--black-400)' }}>XP progress</span>
           <span className="text-[16px] font-medium leading-none" style={{ color: 'var(--black-400)' }}>{currentXp}/{maxXp}</span>
@@ -42,6 +45,14 @@ export function UserProfile({ xp }: UserProfileProps) {
             }}
           />
         </div>
+      </div>
+
+      {/* Daily streak */}
+      <div className="w-full rounded-2xl px-4 py-3 flex items-center gap-2" style={{ backgroundColor: 'var(--light-purple-300)', border: '2px solid var(--light-purple-500)' }}>
+        <Flame className="w-4 h-4" style={{ color: 'var(--orange-400)' }} />
+        <p className="text-[16px] font-medium" style={{ color: 'var(--black-500)' }}>
+          {dailyStreak} day streak
+        </p>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 
 interface SandboxPageProps {
   selectedScenario: "balanced" | "bull" | "bear" | "volatile";
@@ -18,6 +18,9 @@ interface SandboxPageProps {
   sessionStartValue: number;
   actionLog: string[];
   marketPrices: Record<string, number>;
+  claimedMissionIds: string[];
+  onClaimMissionReward: (missionId: string, missionTitle: string, xpReward: number) => void;
+  dailyMissionDayKey: string;
   holdings: Array<{
     assetId: string;
     name: string;
@@ -93,8 +96,12 @@ export function SandboxPage({
   sessionStartValue,
   actionLog,
   marketPrices,
+  claimedMissionIds,
+  onClaimMissionReward,
+  dailyMissionDayKey,
   holdings,
 }: SandboxPageProps) {
+  const settingsRef = useRef<HTMLDetailsElement | null>(null);
   const [limitDrafts, setLimitDrafts] = useState<Record<string, string>>({});
   const [buyLimitDrafts, setBuyLimitDrafts] = useState<Record<string, string>>({});
   const [tradeQtyDrafts, setTradeQtyDrafts] = useState<Record<string, string>>({});
@@ -109,18 +116,21 @@ export function SandboxPage({
       id: "mission-diversification",
       title: "Build a diversified portfolio",
       target: "Reach diversification score >= 60",
+      xpReward: 120,
       completed: diversificationScore >= 60,
     },
     {
       id: "mission-drawdown",
       title: "Protect downside",
       target: "Keep max drawdown below 8%",
+      xpReward: 90,
       completed: maxDrawdown <= 8,
     },
     {
       id: "mission-return",
       title: "Grow the account",
       target: "Reach session return above +3%",
+      xpReward: 140,
       completed: sessionReturnPct >= 3,
     },
   ];
@@ -177,6 +187,15 @@ export function SandboxPage({
 
   const activeGuide = SCENARIO_GUIDE[selectedScenario];
 
+  const handleJumpToScenarioSettings = () => {
+    if (!settingsRef.current) {
+      return;
+    }
+
+    settingsRef.current.open = true;
+    settingsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <div className="px-6 py-8 max-w-6xl mx-auto">
       <header className="mb-8 rounded-2xl p-6" style={{ backgroundColor: 'rgba(255,255,255,0.72)', border: '1px solid var(--light-blue-300)' }}>
@@ -194,7 +213,17 @@ export function SandboxPage({
         </div>
 
         <div className="mt-4 rounded-xl p-4" style={{ backgroundColor: 'white', border: '1px dashed var(--black-200)' }}>
-          <p className="text-xs" style={{ color: 'var(--black-300)' }}>Current scenario</p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs" style={{ color: 'var(--black-300)' }}>Current scenario</p>
+            <button
+              type="button"
+              onClick={handleJumpToScenarioSettings}
+              className="rounded-full px-2.5 py-1 text-xs font-medium cursor-pointer transition-all hover:brightness-95"
+              style={{ backgroundColor: 'var(--light-blue-100)', border: '1px solid var(--light-blue-300)', color: 'var(--black-500)' }}
+            >
+              ↓ Change
+            </button>
+          </div>
           <p className="text-sm" style={{ color: 'var(--black-500)' }}>
             {SCENARIOS.find((scenario) => scenario.id === selectedScenario)?.label}
           </p>
@@ -559,7 +588,7 @@ export function SandboxPage({
       </section>
 
       {/* Settings - Collapsible */}
-      <details className="rounded-xl p-5 mb-6" style={{ backgroundColor: 'white', border: '1px solid var(--black-100)' }}>
+      <details ref={settingsRef} className="rounded-xl p-5 mb-6" style={{ backgroundColor: 'white', border: '1px solid var(--black-100)' }}>
         <summary className="cursor-pointer text-md " style={{ color: 'var(--black-500)' }}>
           Playground settings
         </summary>
@@ -633,28 +662,101 @@ export function SandboxPage({
         </summary>
 
         <section className="rounded-xl p-4 mt-4" style={{ backgroundColor: 'var(--blue-50)', border: '1px solid var(--black-100)' }}>
-          <h3 className="mb-3" style={{ color: 'var(--black-500)' }}>Playground missions</h3>
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <h3 style={{ color: 'var(--black-500)' }}>Playground missions</h3>
+            <span
+              className="text-xs px-2 py-1 rounded-full whitespace-nowrap"
+              style={{ backgroundColor: 'var(--orange-100)', color: 'var(--black-500)', border: '1px solid var(--orange-200)' }}
+            >
+              Daily
+            </span>
+          </div>
+          <div className="rounded-lg px-3 py-2 mb-3" style={{ backgroundColor: 'white', border: '1px dashed var(--black-100)' }}>
+            <p className="text-xs" style={{ color: 'var(--black-400)' }}>
+              These are daily missions. Rewards refresh every day.
+            </p>
+            <p className="text-[11px] mt-1" style={{ color: 'var(--black-300)' }}>
+              Current daily cycle: {dailyMissionDayKey}
+            </p>
+          </div>
           <div className="grid gap-3 md:grid-cols-3">
             {missions.map((mission) => (
               <article
                 key={mission.id}
-                className="rounded-xl p-4 h-full flex flex-col justify-between"
+                className="rounded-xl p-4 h-full flex flex-col"
                 style={{ backgroundColor: 'white', border: '1px solid var(--black-100)' }}
               >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <p className="text-sm leading-snug pr-1" style={{ color: 'var(--black-500)' }}>
+                <div className="mb-3">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <p className="text-[11px] uppercase tracking-wide" style={{ color: 'var(--black-300)' }}>
+                      Mission
+                    </p>
+                  <span
+                    className="text-xs px-2 py-1 rounded-full whitespace-nowrap inline-flex"
+                    style={{
+                      backgroundColor: claimedMissionIds.includes(mission.id)
+                        ? 'var(--green-50)'
+                        : mission.completed
+                          ? 'var(--orange-100)'
+                          : 'var(--light-blue-200)',
+                      color: 'var(--black-500)',
+                    }}
+                  >
+                    {claimedMissionIds.includes(mission.id)
+                      ? "Claimed"
+                      : mission.completed
+                        ? "Done"
+                        : "Progress"}
+                  </span>
+                  </div>
+                  <p className="text-sm leading-snug" style={{ color: 'var(--black-500)' }}>
                     {mission.title}
                   </p>
-                  <span
-                    className="text-xs px-2 py-1 rounded-full whitespace-nowrap shrink-0"
-                    style={{ backgroundColor: mission.completed ? 'var(--orange-100)' : 'var(--light-blue-200)', color: 'var(--black-500)' }}
-                  >
-                    {mission.completed ? "Done" : "In progress"}
-                  </span>
                 </div>
                 <p className="text-sm leading-relaxed" style={{ color: 'var(--black-400)' }}>
                   {mission.target}
                 </p>
+                <div className="mt-3 mb-3">
+                  <div className="h-1.5 rounded-full" style={{ backgroundColor: 'var(--black-100)' }}>
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${Math.max(0, Math.min(
+                          100,
+                          mission.id === "mission-diversification"
+                            ? (diversificationScore / 60) * 100
+                            : mission.id === "mission-drawdown"
+                              ? maxDrawdown <= 8 ? 100 : Math.max(0, 100 - ((maxDrawdown - 8) / 8) * 100)
+                              : (sessionReturnPct / 3) * 100,
+                        ))}%`,
+                        backgroundColor: mission.completed ? 'var(--orange-400)' : 'var(--light-blue-400)',
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="mt-auto flex items-center justify-between gap-2">
+                  <p className="text-xs font-medium" style={{ color: 'var(--orange-500)' }}>
+                    +{mission.xpReward} XP
+                  </p>
+                  {claimedMissionIds.includes(mission.id) ? (
+                    <span className="text-xs px-2 py-1 rounded-lg" style={{ backgroundColor: 'var(--green-50)', color: 'var(--green-400)', border: '1px solid var(--green-200)' }}>
+                      XP claimed
+                    </span>
+                  ) : mission.completed ? (
+                    <button
+                      type="button"
+                      onClick={() => onClaimMissionReward(mission.id, mission.title, mission.xpReward)}
+                      className="rounded-lg px-2.5 py-1.5 text-xs font-medium cursor-pointer transition-all hover:brightness-95"
+                      style={{ backgroundColor: 'var(--orange-400)', color: 'white', border: '1px solid var(--orange-500)' }}
+                    >
+                      Claim XP
+                    </button>
+                  ) : (
+                    <span className="text-xs px-2 py-1 rounded-lg" style={{ backgroundColor: 'var(--blue-50)', color: 'var(--black-400)', border: '1px solid var(--black-100)' }}>
+                      Locked
+                    </span>
+                  )}
+                </div>
               </article>
             ))}
           </div>

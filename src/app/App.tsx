@@ -35,6 +35,26 @@ export default function App() {
   const PORTFOLIO_SAMPLE_INTERVAL_MS = 15000;
   const MARKET_TICK_MS = 5000;
   const UNIT_1_INVEST_TARGET_YC = 100;
+  const getLocalDayKey = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+  const getDayDiff = (fromDayKey: string, toDayKey: string) => {
+    const fromParts = fromDayKey.split("-").map(Number);
+    const toParts = toDayKey.split("-").map(Number);
+    if (fromParts.length !== 3 || toParts.length !== 3) {
+      return Number.NaN;
+    }
+
+    const [fromYear, fromMonth, fromDay] = fromParts;
+    const [toYear, toMonth, toDay] = toParts;
+    const fromUtc = Date.UTC(fromYear, fromMonth - 1, fromDay);
+    const toUtc = Date.UTC(toYear, toMonth - 1, toDay);
+    return Math.round((toUtc - fromUtc) / 86400000);
+  };
 
   const [balance, setBalance] = useState(10000);
   const [xp, setXp] = useState(0);
@@ -50,10 +70,14 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<"learning" | "sandbox" | "theory" | "rewards">("learning");
   const [marketScenario, setMarketScenario] = useState<"balanced" | "bull" | "bear" | "volatile">("balanced");
   const [claimedRewards, setClaimedRewards] = useState<string[]>([]);
+  const [dailyLoginStreak, setDailyLoginStreak] = useState(1);
+  const [lastActiveDayKey, setLastActiveDayKey] = useState(() => getLocalDayKey());
   const [unlockedCosmetics, setUnlockedCosmetics] = useState<string[]>([]);
   const [accountValueHistory, setAccountValueHistory] = useState<number[]>([]);
   const [sandboxSessionStartValue, setSandboxSessionStartValue] = useState(10000);
   const [sandboxActionLog, setSandboxActionLog] = useState<string[]>([]);
+  const [claimedSandboxMissionIds, setClaimedSandboxMissionIds] = useState<string[]>([]);
+  const [sandboxMissionDayKey, setSandboxMissionDayKey] = useState(() => getLocalDayKey());
   const [sandboxBalance, setSandboxBalance] = useState(10000);
   const [sandboxHoldings, setSandboxHoldings] = useState<Record<string, Holding>>({});
   const [tradeContext, setTradeContext] = useState<"learning" | "sandbox">("learning");
@@ -297,13 +321,19 @@ export default function App() {
         holdings: Record<string, Holding>;
         unitsProgress: UnitProgress[];
         claimedRewards: string[];
+        dailyLoginStreak: number;
+        lastActiveDayKey: string;
         unlockedCosmetics: string[];
         sandboxBalance: number;
         sandboxHoldings: Record<string, Holding>;
         marketScenario: "balanced" | "bull" | "bear" | "volatile";
         sandboxSessionStartValue: number;
         sandboxActionLog: string[];
+        claimedSandboxMissionIds: string[];
+        sandboxMissionDayKey: string;
       }>;
+
+      const todayDayKey = getLocalDayKey();
 
       if (saved.activeTab) setActiveTab(saved.activeTab);
       if (typeof saved.balance === "number") setBalance(saved.balance);
@@ -311,16 +341,57 @@ export default function App() {
       if (saved.holdings) setHoldings(saved.holdings);
       if (saved.unitsProgress) setUnitsProgress(saved.unitsProgress);
       if (saved.claimedRewards) setClaimedRewards(saved.claimedRewards);
+
+      if (typeof saved.dailyLoginStreak === "number" && saved.lastActiveDayKey) {
+        const dayDiff = getDayDiff(saved.lastActiveDayKey, todayDayKey);
+        if (dayDiff === 0) {
+          setDailyLoginStreak(Math.max(1, saved.dailyLoginStreak));
+          setLastActiveDayKey(saved.lastActiveDayKey);
+        } else if (dayDiff === 1) {
+          setDailyLoginStreak(Math.max(1, saved.dailyLoginStreak) + 1);
+          setLastActiveDayKey(todayDayKey);
+        } else {
+          setDailyLoginStreak(1);
+          setLastActiveDayKey(todayDayKey);
+        }
+      } else {
+        setDailyLoginStreak(1);
+        setLastActiveDayKey(todayDayKey);
+      }
+
       if (saved.unlockedCosmetics) setUnlockedCosmetics(saved.unlockedCosmetics);
       if (typeof saved.sandboxBalance === "number") setSandboxBalance(saved.sandboxBalance);
       if (saved.sandboxHoldings) setSandboxHoldings(saved.sandboxHoldings);
       if (saved.marketScenario) setMarketScenario(saved.marketScenario);
       if (typeof saved.sandboxSessionStartValue === "number") setSandboxSessionStartValue(saved.sandboxSessionStartValue);
       if (saved.sandboxActionLog) setSandboxActionLog(saved.sandboxActionLog);
+      if (saved.sandboxMissionDayKey === todayDayKey) {
+        setSandboxMissionDayKey(saved.sandboxMissionDayKey);
+        if (saved.claimedSandboxMissionIds) setClaimedSandboxMissionIds(saved.claimedSandboxMissionIds);
+      } else {
+        setSandboxMissionDayKey(todayDayKey);
+        setClaimedSandboxMissionIds([]);
+      }
     } catch {
       // Ignore corrupted local storage payload.
     }
   }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const todayDayKey = getLocalDayKey();
+      if (todayDayKey === sandboxMissionDayKey) {
+        return;
+      }
+
+      setSandboxMissionDayKey(todayDayKey);
+      setClaimedSandboxMissionIds([]);
+      setMascotMessage("New day, new daily missions. Rewards are refreshed.");
+      pushSandboxAction("Daily missions refreshed.");
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [sandboxMissionDayKey]);
 
   useEffect(() => {
     const payload = {
@@ -330,12 +401,16 @@ export default function App() {
       holdings,
       unitsProgress,
       claimedRewards,
+      dailyLoginStreak,
+      lastActiveDayKey,
       unlockedCosmetics,
       sandboxBalance,
       sandboxHoldings,
       marketScenario,
       sandboxSessionStartValue,
       sandboxActionLog,
+      claimedSandboxMissionIds,
+      sandboxMissionDayKey,
     };
 
     localStorage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify(payload));
@@ -346,13 +421,28 @@ export default function App() {
     holdings,
     unitsProgress,
     claimedRewards,
+    dailyLoginStreak,
+    lastActiveDayKey,
     unlockedCosmetics,
     sandboxBalance,
     sandboxHoldings,
     marketScenario,
     sandboxSessionStartValue,
     sandboxActionLog,
+    claimedSandboxMissionIds,
+    sandboxMissionDayKey,
   ]);
+
+  const handleClaimSandboxMissionReward = (missionId: string, missionTitle: string, xpReward: number) => {
+    if (claimedSandboxMissionIds.includes(missionId)) {
+      return;
+    }
+
+    setClaimedSandboxMissionIds((prev) => [...prev, missionId]);
+    setXp((prev) => prev + xpReward);
+    setMascotMessage(`Mission completed: ${missionTitle}. +${xpReward} XP earned!`);
+    pushSandboxAction(`Mission reward claimed: ${missionTitle} (+${xpReward} XP)`);
+  };
 
   useEffect(() => {
     if (!hasPortfolioData) {
@@ -454,7 +544,7 @@ export default function App() {
     });
 
     if (soldLabels.length > 0) {
-      setMascotMessage("A sell limit was reached. The Sandbox position was sold automatically.");
+      setMascotMessage("A sell limit was reached. The Playground position was sold automatically.");
     }
   }, [marketPrices, sandboxHoldings]);
 
@@ -515,7 +605,7 @@ export default function App() {
     });
 
     if (boughtLabels.length > 0) {
-      setMascotMessage("An auto-buy limit was reached. The Sandbox position was bought automatically.");
+      setMascotMessage("An auto-buy limit was reached. The Playground position was bought automatically.");
     }
   }, [marketPrices, sandboxBalance, sandboxHoldings]);
 
@@ -794,7 +884,7 @@ export default function App() {
         };
       });
 
-      setMascotMessage(`Sandbox buy executed: ${asset.name}.`);
+      setMascotMessage(`Playground buy executed: ${asset.name}.`);
       pushSandboxAction(`Bought ${quantity} ${asset.name} at ${Math.round(unitPrice)} YQ`);
       return;
     }
@@ -826,7 +916,7 @@ export default function App() {
       };
     });
 
-    setMascotMessage(`Sandbox sell executed on ${asset.name}.`);
+    setMascotMessage(`Playground sell executed on ${asset.name}.`);
     pushSandboxAction(`Sold ${quantity} ${asset.name} at ${Math.round(unitPrice)} YQ`);
   };
 
@@ -1075,8 +1165,10 @@ export default function App() {
     setAccountValueHistory([]);
     setSandboxSessionStartValue(10000);
     setSandboxActionLog([]);
-    setMascotMessage("Sandbox reset complete. Fresh start!");
-    pushSandboxAction("Sandbox session reset to 10,000 YQ");
+    setClaimedSandboxMissionIds([]);
+    setSandboxMissionDayKey(getLocalDayKey());
+    setMascotMessage("Playground reset complete. Fresh start!");
+    pushSandboxAction("Playground session reset to 10,000 YQ");
   };
 
   const handleSetSandboxBudget = (amount: number) => {
@@ -1085,8 +1177,10 @@ export default function App() {
     setAccountValueHistory([]);
     setSandboxSessionStartValue(amount);
     setSandboxActionLog([]);
-    setMascotMessage(`Sandbox budget set to ${amount.toLocaleString()} YQ.`);
-    pushSandboxAction(`Sandbox budget configured to ${amount.toLocaleString()} YQ`);
+    setClaimedSandboxMissionIds([]);
+    setSandboxMissionDayKey(getLocalDayKey());
+    setMascotMessage(`Playground budget set to ${amount.toLocaleString()} YQ.`);
+    pushSandboxAction(`Playground budget configured to ${amount.toLocaleString()} YQ`);
   };
 
   const mission = getCurrentMission();
@@ -1101,7 +1195,7 @@ export default function App() {
 
   const sandboxCoachMessage = useMemo(() => {
     if (sandboxPortfolioValue <= 0) {
-      return "Pick a scenario, open INVEST, and place your first sandbox trade.";
+      return "Pick a scenario, open INVEST, and place your first playground trade.";
     }
     if (maxDrawdown > 8) {
       return "Drawdown is getting high. Reduce risk or keep more cash buffer.";
@@ -1129,7 +1223,7 @@ export default function App() {
 
   const rightPanelTheme: Record<"learning" | "sandbox" | "theory" | "rewards", { border: string; bg: string; label: string }> = {
     learning: { border: 'var(--black-100)', bg: 'white', label: 'Learning controls' },
-    sandbox: { border: 'var(--orange-200)', bg: 'var(--orange-50)', label: 'Sandbox tools' },
+    sandbox: { border: 'var(--orange-200)', bg: 'var(--orange-50)', label: 'Playground tools' },
     theory: { border: 'var(--light-blue-300)', bg: 'var(--light-blue-100)', label: 'Theory tools' },
     rewards: { border: 'var(--orange-200)', bg: 'var(--orange-50)', label: 'Rewards tools' },
   };
@@ -1140,7 +1234,7 @@ export default function App() {
     <div className="h-screen w-full flex overflow-hidden" style={{ backgroundColor: 'var(--blue-50)' }}>
       {/* Left Sidebar */}
       <div className="w-[340px] h-full shrink-0 bg-white flex flex-col overflow-hidden" style={{ borderRight: '1px solid var(--black-100)' }}>
-        <UserProfile xp={xp} />
+        <UserProfile xp={xp} dailyStreak={dailyLoginStreak} />
         <Navigation
           activeTab={activeTab}
           onLearningPathClick={() => setActiveTab("learning")}
@@ -1181,6 +1275,9 @@ export default function App() {
             actionLog={sandboxActionLog}
             marketPrices={marketPrices}
             holdings={sandboxHoldingsList}
+            claimedMissionIds={claimedSandboxMissionIds}
+            onClaimMissionReward={handleClaimSandboxMissionReward}
+            dailyMissionDayKey={sandboxMissionDayKey}
           />
         ) : activeTab === "rewards" ? (
           <RewardsPage
@@ -1190,6 +1287,7 @@ export default function App() {
             holdingsCount={holdingsList.length}
             sectorCount={holdingsSectorCount}
             claimedRewards={claimedRewards}
+            dailyStreak={dailyLoginStreak}
             unlockedCosmetics={unlockedCosmetics}
             onClaimReward={handleClaimReward}
             onPurchaseCosmetic={handlePurchaseCosmetic}
@@ -1303,8 +1401,8 @@ export default function App() {
           <>
             <div className="rounded-xl p-4" style={{ backgroundColor: 'white', border: '1px solid var(--black-100)' }}>
               <p style={{ color: 'var(--black-500)' }}>Scenario: {scenarioLabel[marketScenario]}</p>
-              <p style={{ color: 'var(--black-500)' }}>Sandbox cash: {Math.round(sandboxBalance).toLocaleString()} YQ</p>
-              <p style={{ color: 'var(--black-500)' }}>Sandbox invested value: {Math.round(sandboxPortfolioValue).toLocaleString()} YQ</p>
+              <p style={{ color: 'var(--black-500)' }}>Playground cash: {Math.round(sandboxBalance).toLocaleString()} YQ</p>
+              <p style={{ color: 'var(--black-500)' }}>Playground invested value: {Math.round(sandboxPortfolioValue).toLocaleString()} YQ</p>
               <p style={{ color: 'var(--black-500)' }}>Diversification score: {diversificationScore}/100</p>
               <p style={{ color: 'var(--black-500)' }}>Max drawdown: {maxDrawdown.toFixed(2)}%</p>
             </div>

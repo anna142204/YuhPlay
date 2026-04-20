@@ -12,6 +12,7 @@ interface RewardsPageProps {
   holdingsCount: number;
   sectorCount: number;
   claimedRewards: string[];
+  dailyStreak: number;
   unlockedCosmetics: string[];
   onClaimReward: (rewardId: string, yc: number, xp: number) => void;
   onPurchaseCosmetic: (itemId: string, cost: number) => void;
@@ -47,35 +48,47 @@ export function RewardsPage({
   holdingsCount,
   sectorCount,
   claimedRewards,
+  dailyStreak,
   unlockedCosmetics,
   onClaimReward,
   onPurchaseCosmetic,
   onOpenPromo,
 }: RewardsPageProps) {
+  const streakMilestones = [3, 7, 14];
+  const nextStreakMilestone = streakMilestones.find((milestone) => dailyStreak < milestone) ?? null;
+
   const achievements: AchievementReward[] = [
     {
-      id: "first-investment",
-      title: "First Investment",
-      description: "Open your first market position.",
-      ycReward: 120,
-      xpReward: 90,
-      unlocked: holdingsCount > 0,
-    },
-    {
-      id: "smart-diversifier",
-      title: "Smart Diversifier",
-      description: "Hold positions in at least 2 different sectors.",
-      ycReward: 180,
+      id: "streak-3-days",
+      title: "3-Day Streak",
+      description: "Open Yuhlearn for 3 consecutive days.",
+      ycReward: 140,
       xpReward: 120,
-      unlocked: sectorCount >= 2,
+      unlocked: dailyStreak >= 3,
     },
     {
-      id: "crash-survivor",
-      title: "Crash Survivor",
-      description: "Complete Unit 3 and pass the crash mindset challenge.",
-      ycReward: 240,
+      id: "streak-7-days",
+      title: "7-Day Streak",
+      description: "Keep your learning momentum for one full week.",
+      ycReward: 260,
+      xpReward: 200,
+      unlocked: dailyStreak >= 7,
+    },
+    {
+      id: "streak-14-days",
+      title: "14-Day Streak",
+      description: "Show consistency over 2 consecutive weeks.",
+      ycReward: 420,
+      xpReward: 320,
+      unlocked: dailyStreak >= 14,
+    },
+    {
+      id: "learning-builder",
+      title: "Learning Builder",
+      description: "Complete at least 2 units or reach 1,000 XP.",
+      ycReward: 220,
       xpReward: 180,
-      unlocked: Boolean(unitsProgress.find((u) => u.unitId === 3)?.completed),
+      unlocked: unitsProgress.filter((u) => u.completed).length >= 2 || xp >= 1000,
     },
   ];
 
@@ -114,14 +127,16 @@ export function RewardsPage({
 
       <section className="rounded-xl p-5 mb-6" style={{ backgroundColor: 'white', border: '1px solid var(--black-100)' }}>
         <h3 className="mb-4" style={{ color: 'var(--black-500)' }}>Achievement Rewards</h3>
-        <div className="grid gap-3 md:grid-cols-3">
+        
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {achievements.map((achievement) => {
             const claimed = claimedRewards.includes(achievement.id);
             const state = claimed ? "claimed" : achievement.unlocked ? "claimable" : "locked";
             return (
-              <article key={achievement.id} className="rounded-xl p-4" style={{ backgroundColor: 'var(--blue-50)', border: '1px solid var(--black-100)' }}>
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <h4 style={{ color: 'var(--black-500)' }}>{achievement.title}</h4>
+              <article key={achievement.id} className="rounded-xl p-4 h-[180px] flex flex-col" style={{ backgroundColor: 'var(--blue-50)', border: '1px solid var(--black-100)' }}>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <h4 className="text-sm leading-tight" style={{ color: 'var(--black-500)' }}>{achievement.title}</h4>
                   <span
                     className="text-xs px-2 py-1 rounded-full whitespace-nowrap"
                     style={{
@@ -137,15 +152,15 @@ export function RewardsPage({
                     {state === "claimed" ? "Claimed" : state === "claimable" ? "Ready" : "Locked"}
                   </span>
                 </div>
-                <p className="text-sm mb-3" style={{ color: 'var(--black-400)' }}>{achievement.description}</p>
-                <p className="text-xs mb-3" style={{ color: 'var(--black-400)' }}>
+                <p className="text-sm leading-snug" style={{ color: 'var(--black-400)' }}>{achievement.description}</p>
+                <p className="text-xs mt-3 mb-3" style={{ color: 'var(--black-400)' }}>
                   Reward: +{achievement.ycReward} YQ and +{achievement.xpReward} XP
                 </p>
                 <button
                   type="button"
                   disabled={!achievement.unlocked || claimed}
                   onClick={() => onClaimReward(achievement.id, achievement.ycReward, achievement.xpReward)}
-                  className="w-full rounded-lg px-3 py-2 text-sm transition-all cursor-pointer disabled:cursor-not-allowed"
+                  className="w-full mt-auto rounded-lg px-3 py-2 text-sm transition-all cursor-pointer disabled:cursor-not-allowed"
                   style={{
                     backgroundColor:
                       state === "claimed"
@@ -162,7 +177,7 @@ export function RewardsPage({
                         : '1px solid var(--orange-500)',
                   }}
                 >
-                  {state === "claimed" ? "Claimed ✓" : state === "claimable" ? "Claim reward" : "Locked - complete objective"}
+                  {state === "claimed" ? "Claimed ✓" : state === "claimable" ? "Claim" : "Locked"}
                 </button>
               </article>
             );
