@@ -53,11 +53,15 @@ Le projet combine:
 
 1. Installer les dépendances
 
+```bash
 npm install
+```
 
 2. Lancer le serveur de développement
 
+```bash
 npm run dev
+```
 
 3. Ouvrir l'URL affichée dans le terminal (souvent http://localhost:5173)
 
