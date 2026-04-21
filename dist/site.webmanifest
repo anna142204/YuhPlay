@@ -1,0 +1,26 @@
+{
+  "name": "YuhPlay",
+  "short_name": "YuhPlay",
+  "description": "Interactive playground to learn investing and market scenarios.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "theme_color": "#111827",
+  "background_color": "#f2f2f2",
+  "display": "standalone",
+  "orientation": "portrait"
+}
