@@ -1221,6 +1221,34 @@ export default function App() {
     marketScenario,
   ]);
 
+  const theoryCoachMessage = useMemo(() => {
+    if (completedUnitsCount === 0) {
+      return "Start with Unit 1 theory. Build the base first, then scale your strategy.";
+    }
+    if (completedQuizzesCount < completedUnitsCount) {
+      return "Great progress in theory. Complete the pending quiz to lock in your gains.";
+    }
+    if (completedUnitsCount < unitsProgress.length) {
+      return `Nice consistency. Focus next on Unit ${nextTheoryUnit} to keep momentum.`;
+    }
+    return "Theory mastered. Revisit key concepts before testing harder sandbox scenarios.";
+  }, [completedUnitsCount, completedQuizzesCount, nextTheoryUnit, unitsProgress.length]);
+
+  const rewardsCoachMessage = useMemo(() => {
+    const remainingUnitsToPromo = Math.max(0, unitsProgress.length - completedUnitsCount);
+
+    if (claimedRewards.length === 0) {
+      return "First claim unlocks your reward loop. Start with an easy achievement.";
+    }
+    if (remainingUnitsToPromo > 0) {
+      return `Claim available rewards, then finish ${remainingUnitsToPromo} more unit${remainingUnitsToPromo === 1 ? "" : "s"} to unlock promo bonuses.`;
+    }
+    if (unlockedCosmetics.length === 0) {
+      return "Promo is unlocked. Use your YQ to grab your first cosmetic upgrade.";
+    }
+    return "Strong reward strategy. Keep your streak alive to unlock higher-tier achievements.";
+  }, [claimedRewards.length, completedUnitsCount, unlockedCosmetics.length, unitsProgress.length]);
+
   const rightPanelTheme: Record<"learning" | "sandbox" | "theory" | "rewards", { border: string; bg: string; label: string }> = {
     learning: { border: 'var(--black-100)', bg: 'white', label: 'Learning controls' },
     sandbox: { border: 'var(--orange-200)', bg: 'var(--orange-50)', label: 'Playground tools' },
@@ -1289,8 +1317,8 @@ export default function App() {
             claimedRewards={claimedRewards}
             dailyStreak={dailyLoginStreak}
             unlockedCosmetics={unlockedCosmetics}
-            onClaimReward={handleClaimReward}
             onPurchaseCosmetic={handlePurchaseCosmetic}
+            onClaimReward={handleClaimReward}
             onOpenPromo={() => setPromoModalOpen(true)}
           />
         ) : (
@@ -1367,6 +1395,10 @@ export default function App() {
             >
               Back to learning path
             </button>
+
+            <div className="mt-auto pt-2">
+              <Mascot message={theoryCoachMessage} />
+            </div>
           </>
         ) : activeTab === "rewards" ? (
           <>
@@ -1396,6 +1428,10 @@ export default function App() {
                 </p>
               </div>
             )}
+
+            <div className="mt-auto pt-2">
+              <Mascot message={rewardsCoachMessage} />
+            </div>
           </>
         ) : (
           <>

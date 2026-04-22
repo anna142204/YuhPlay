@@ -14,8 +14,8 @@ interface RewardsPageProps {
   claimedRewards: string[];
   dailyStreak: number;
   unlockedCosmetics: string[];
-  onClaimReward: (rewardId: string, yc: number, xp: number) => void;
   onPurchaseCosmetic: (itemId: string, cost: number) => void;
+  onClaimReward: (rewardId: string, yc: number, xp: number) => void;
   onOpenPromo: () => void;
 }
 
@@ -32,13 +32,52 @@ interface ShopItem {
   id: string;
   name: string;
   description: string;
+  cosmeticEffect: string;
+  unlockRule: string;
+  minCompletedUnits: number;
+  minClaimedRewards: number;
+  minDailyStreak: number;
+  minXp: number;
   cost: number;
 }
 
 const SHOP_ITEMS: ShopItem[] = [
-  { id: "theme-arctic", name: "Arctic Theme", description: "A clean blue profile theme.", cost: 250 },
-  { id: "title-patient", name: "Profile Title: Patient Investor", description: "Unlock a long-term mindset title.", cost: 180 },
-  { id: "mascot-neo", name: "Mascot Skin: Neo Owl", description: "A fresh mascot skin for your dashboard.", cost: 320 },
+  {
+    id: "cosmetic-mascot-galaxy",
+    name: "Mascotte Nebula",
+    description: "A premium variant of the Yuhlearn mascot with a pink-blue gradient.",
+    cosmeticEffect: "Active cosmetic: mascot appears with a pink-blue gradient style.",
+    unlockRule: "Requires 3 completed units, 5 claimed rewards, 7-day streak, and 1,800 XP.",
+    minCompletedUnits: 3,
+    minClaimedRewards: 5,
+    minDailyStreak: 7,
+    minXp: 1800,
+    cost: 6500,
+  },
+  {
+    id: "cosmetic-profile-gold-frame",
+    name: "Cadre Gold",
+    description: "A premium animated frame for your profile panel.",
+    cosmeticEffect: "Active cosmetic: profile card uses a Gold frame.",
+    unlockRule: "Requires all 4 units completed, 8 claimed rewards, 10-day streak, and 2,400 XP.",
+    minCompletedUnits: 4,
+    minClaimedRewards: 8,
+    minDailyStreak: 10,
+    minXp: 2400,
+    cost: 11000,
+  },
+  {
+    id: "cosmetic-title-market-legend",
+    name: "Titre Legend",
+    description: "An endgame prestige title with elite visual badge.",
+    cosmeticEffect: "Active cosmetic: elite title badge displayed in rewards and profile.",
+    unlockRule: "Requires all units completed, 10 claimed rewards, 14-day streak, and 3,200 XP.",
+    minCompletedUnits: 4,
+    minClaimedRewards: 10,
+    minDailyStreak: 14,
+    minXp: 3200,
+    cost: 20000,
+  },
 ];
 
 export function RewardsPage({
@@ -50,8 +89,8 @@ export function RewardsPage({
   claimedRewards,
   dailyStreak,
   unlockedCosmetics,
-  onClaimReward,
   onPurchaseCosmetic,
+  onClaimReward,
   onOpenPromo,
 }: RewardsPageProps) {
   const streakMilestones = [3, 7, 14];
@@ -90,6 +129,22 @@ export function RewardsPage({
       xpReward: 180,
       unlocked: unitsProgress.filter((u) => u.completed).length >= 2 || xp >= 1000,
     },
+    {
+      id: "portfolio-starter",
+      title: "Portfolio Starter",
+      description: "Hold at least 3 assets and diversify into 2 sectors.",
+      ycReward: 240,
+      xpReward: 190,
+      unlocked: holdingsCount >= 3 && sectorCount >= 2,
+    },
+    {
+      id: "discipline-drive",
+      title: "Discipline Drive",
+      description: "Keep a 5-day streak and complete at least 3 units.",
+      ycReward: 320,
+      xpReward: 260,
+      unlocked: dailyStreak >= 5 && unitsProgress.filter((u) => u.completed).length >= 3,
+    },
   ];
 
   const unitRewards = unitsProgress.map((unit) => ({
@@ -113,13 +168,13 @@ export function RewardsPage({
           Claim achievement rewards, unlock unit bonuses, and spend YQ on cosmetics to personalize your journey.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
-          <span className="text-sm px-3 py-1 rounded-full" style={{ backgroundColor: 'var(--light-blue-100)', color: 'var(--black-500)' }}>
+          <span className="text-sm px-3 py-1 rounded-full" style={{ backgroundColor: 'var(--purple-200)', color: 'var(--black-500)' }}>
             Wallet: {Math.round(balance).toLocaleString()} YQ
           </span>
-          <span className="text-sm px-3 py-1 rounded-full" style={{ backgroundColor: 'var(--orange-50)', color: 'var(--black-500)' }}>
+          <span className="text-sm px-3 py-1 rounded-full" style={{ backgroundColor: 'var(--orange-100)', color: 'var(--black-500)' }}>
             XP: {xp.toLocaleString()}
           </span>
-          <span className="text-sm px-3 py-1 rounded-full" style={{ backgroundColor: 'var(--blue-50)', color: 'var(--black-500)' }}>
+          <span className="text-sm px-3 py-1 rounded-full" style={{ backgroundColor: 'var(--blue-100)', color: 'var(--black-500)' }}>
             Units completed: {completedUnits}/4
           </span>
         </div>
@@ -134,8 +189,8 @@ export function RewardsPage({
             const claimed = claimedRewards.includes(achievement.id);
             const state = claimed ? "claimed" : achievement.unlocked ? "claimable" : "locked";
             return (
-              <article key={achievement.id} className="rounded-xl p-5 h-full min-h-[250px] flex flex-col" style={{ backgroundColor: 'var(--blue-50)', border: '1px solid var(--black-100)' }}>
-                <div className="flex items-center justify-between gap-2 mb-3">
+              <article key={achievement.id} className="rounded-xl p-4" style={{ backgroundColor: 'var(--blue-50)', border: '1px solid var(--black-100)' }}>
+                <div className="flex items-center justify-between mb-2">
                   <h4 className="text-sm leading-tight" style={{ color: 'var(--black-500)' }}>{achievement.title}</h4>
                   <span
                     className="text-xs px-2 py-1 rounded-full whitespace-nowrap"
@@ -152,15 +207,12 @@ export function RewardsPage({
                     {state === "claimed" ? "Claimed" : state === "claimable" ? "Ready" : "Locked"}
                   </span>
                 </div>
-                <p className="text-sm leading-snug" style={{ color: 'var(--black-400)' }}>{achievement.description}</p>
-                <p className="text-xs mt-4 mb-4" style={{ color: 'var(--black-400)' }}>
-                  Reward: +{achievement.ycReward} YQ and +{achievement.xpReward} XP
-                </p>
+                <p className="text-sm mb-3" style={{ color: 'var(--black-400)' }}>{achievement.description}</p>
                 <button
                   type="button"
                   disabled={!achievement.unlocked || claimed}
                   onClick={() => onClaimReward(achievement.id, achievement.ycReward, achievement.xpReward)}
-                  className="w-full mt-auto rounded-lg px-3 py-2 text-sm transition-all cursor-pointer disabled:cursor-not-allowed"
+                  className="rounded-lg px-3 py-2 text-sm transition-all cursor-pointer disabled:cursor-not-allowed"
                   style={{
                     backgroundColor:
                       state === "claimed"
@@ -177,7 +229,7 @@ export function RewardsPage({
                         : '1px solid var(--orange-500)',
                   }}
                 >
-                  {state === "claimed" ? "Claimed ✓" : state === "claimable" ? "Claim" : "Locked"}
+                  {state === "claimed" ? "Claimed ✓" : state === "claimable" ? `Claim +${achievement.ycReward} YQ / +${achievement.xpReward} XP` : "Locked - complete achievement"}
                 </button>
               </article>
             );
@@ -242,43 +294,85 @@ export function RewardsPage({
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2">
+      <section className="mb-6">
         <div className="rounded-xl p-5" style={{ backgroundColor: 'white', border: '1px solid var(--black-100)' }}>
-          <h3 className="mb-4" style={{ color: 'var(--black-500)' }}>Reward Shop</h3>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <h3 style={{ color: 'var(--black-500)' }}>Reward Shop</h3>
+            <span className="text-xs px-2.5 py-1 rounded-full" style={{ backgroundColor: 'var(--orange-50)', color: 'var(--black-500)', border: '1px solid var(--orange-200)' }}>
+              Cosmetic-only items
+            </span>
+          </div>
+
           <div className="space-y-3">
             {SHOP_ITEMS.map((item) => {
               const owned = unlockedCosmetics.includes(item.id);
+              const meetsProgressRequirements =
+                completedUnits >= item.minCompletedUnits &&
+                claimedRewards.length >= item.minClaimedRewards &&
+                dailyStreak >= item.minDailyStreak &&
+                xp >= item.minXp;
+              const canAfford = balance >= item.cost;
+              const canBuy = meetsProgressRequirements && canAfford;
+
               return (
-                <article key={item.id} className="rounded-lg p-3" style={{ backgroundColor: 'var(--blue-50)', border: '1px solid var(--black-100)' }}>
+                <article key={item.id} className="rounded-xl p-4" style={{ backgroundColor: 'var(--blue-50)', border: '1px solid var(--black-100)' }}>
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div>
                       <h4 style={{ color: 'var(--black-500)' }}>{item.name}</h4>
-                      <p className="text-sm" style={{ color: 'var(--black-400)' }}>{item.description}</p>
+                      <p className="text-sm mt-1" style={{ color: 'var(--black-400)' }}>{item.description}</p>
                     </div>
-                    <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: 'var(--orange-50)', color: 'var(--black-500)' }}>
-                      {item.cost} YQ
+                    <span className="text-xs px-2 py-1 rounded-full whitespace-nowrap" style={{ backgroundColor: 'white', color: 'var(--black-500)', border: '1px solid var(--black-100)' }}>
+                      {item.cost.toLocaleString()} YQ
                     </span>
                   </div>
-                  <button
-                    type="button"
-                    disabled={owned || balance < item.cost}
-                    onClick={() => onPurchaseCosmetic(item.id, item.cost)}
-                    className="rounded-lg px-3 py-2 text-sm transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
-                    style={{ backgroundColor: 'var(--light-blue-400)', color: 'white' }}
-                  >
-                    {owned ? "Owned" : balance < item.cost ? "Not enough YQ" : "Purchase"}
-                  </button>
+
+                  <p className="text-sm mb-1" style={{ color: 'var(--black-400)' }}>{item.cosmeticEffect}</p>
+                  <p className="text-xs mb-3" style={{ color: 'var(--black-300)' }}>{item.unlockRule}</p>
+
+                  <div className="flex items-center justify-between gap-2">
+                    <span
+                      className="text-xs px-2 py-1 rounded-full"
+                      style={{
+                        backgroundColor: owned ? 'var(--orange-100)' : canBuy ? 'var(--light-blue-100)' : 'var(--black-50)',
+                        color: 'var(--black-500)',
+                        border: owned ? '1px solid var(--orange-300)' : canBuy ? '1px solid var(--light-blue-300)' : '1px solid var(--black-100)',
+                      }}
+                    >
+                      {owned ? "Activated" : canBuy ? "Eligible" : "Locked"}
+                    </span>
+
+                    <button
+                      type="button"
+                      disabled={owned || !canBuy}
+                      onClick={() => onPurchaseCosmetic(item.id, item.cost)}
+                      className="rounded-lg px-3 py-2 text-sm transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+                      style={{
+                        backgroundColor: owned ? 'var(--orange-200)' : canBuy ? 'var(--light-blue-400)' : 'var(--black-100)',
+                        color: owned || canBuy ? 'white' : 'var(--black-400)',
+                      }}
+                    >
+                      {owned
+                        ? "Active"
+                        : !meetsProgressRequirements
+                          ? "Progress locked"
+                          : canAfford
+                            ? `Buy for ${item.cost.toLocaleString()} YQ`
+                            : "Not enough YQ"}
+                    </button>
+                  </div>
                 </article>
               );
             })}
           </div>
         </div>
+      </section>
 
+      <section>
         <div className="rounded-xl p-5" style={{ backgroundColor: 'white', border: '1px solid var(--black-100)' }}>
           <h3 className="mb-2" style={{ color: 'var(--black-500)' }}>Promo & Referral</h3>
           <p className="text-sm mb-4" style={{ color: 'var(--black-400)' }}>
             {allUnitsCompleted
-              ? "Have a promo code? Claim extra YQ and unlock exclusive cosmetic rewards."
+              ? "Have a promo code? Claim extra YQ and XP."
               : `Finish ${remainingUnits} more unit${remainingUnits > 1 ? "s" : ""} to unlock promo rewards.`}
           </p>
           {allUnitsCompleted ? (
