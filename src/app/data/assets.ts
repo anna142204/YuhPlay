@@ -24,7 +24,7 @@ export const ASSETS: Asset[] = [
     sector: "Consumer Goods",
     basePrice: 100,
     risk: "Low risk",
-    icon: "CH",
+    icon: "NS",
     description: "Defensive business with stable cashflows and resilient demand."
   },
   {

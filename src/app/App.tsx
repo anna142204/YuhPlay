@@ -520,17 +520,23 @@ export default function App() {
       return;
     }
 
-    let proceeds = 0;
-    const soldLabels: string[] = [];
+    const executedSells = autoSellOrders.map((holding) => {
+      const executionPrice = Math.round(holding.sellLimitPrice ?? marketPrices[holding.assetId] ?? holding.averagePrice);
+      return {
+        assetId: holding.assetId,
+        proceeds: executionPrice * holding.quantity,
+        label: `${holding.quantity.toFixed(2)} ${holding.name} at ${executionPrice} YQ`,
+      };
+    });
+
+    const proceeds = executedSells.reduce((sum, sell) => sum + sell.proceeds, 0);
+    const soldLabels = executedSells.map((sell) => sell.label);
 
     setSandboxHoldings((previous) => {
       const next = { ...previous };
 
-      autoSellOrders.forEach((holding) => {
-        const executionPrice = Math.round(holding.sellLimitPrice ?? marketPrices[holding.assetId] ?? holding.averagePrice);
-        proceeds += executionPrice * holding.quantity;
-        soldLabels.push(`${holding.quantity.toFixed(2)} ${holding.name} at ${executionPrice} YQ`);
-        delete next[holding.assetId];
+      executedSells.forEach((sell) => {
+        delete next[sell.assetId];
       });
 
       return next;
@@ -563,42 +569,55 @@ export default function App() {
       return;
     }
 
-    let spent = 0;
-    const boughtLabels: string[] = [];
+    let plannedSpent = 0;
+    const executedBuys = autoBuyOrders
+      .map((holding) => {
+        const executionPrice = Math.round(holding.buyLimitPrice ?? marketPrices[holding.assetId] ?? holding.averagePrice);
+        return {
+          assetId: holding.assetId,
+          name: holding.name,
+          executionPrice,
+        };
+      })
+      .filter((buy) => {
+        const affordable = sandboxBalance - plannedSpent >= buy.executionPrice;
+        if (affordable) {
+          plannedSpent += buy.executionPrice;
+        }
+        return affordable;
+      });
+
+    if (executedBuys.length === 0) {
+      return;
+    }
+
+    const boughtLabels = executedBuys.map((buy) => `1 ${buy.name} at ${buy.executionPrice} YQ`);
 
     setSandboxHoldings((previous) => {
       const next = { ...previous };
 
-      autoBuyOrders.forEach((holding) => {
-        const current = next[holding.assetId];
+      executedBuys.forEach((buy) => {
+        const current = next[buy.assetId];
         if (!current) {
           return;
         }
 
-        const executionPrice = Math.round(holding.buyLimitPrice ?? marketPrices[holding.assetId] ?? holding.averagePrice);
-        if (sandboxBalance - spent < executionPrice) {
-          return;
-        }
-
         const newQuantity = current.quantity + 1;
-        const newAverage = (current.averagePrice * current.quantity + executionPrice) / newQuantity;
+        const newAverage = (current.averagePrice * current.quantity + buy.executionPrice) / newQuantity;
 
-        next[holding.assetId] = {
+        next[buy.assetId] = {
           ...current,
           quantity: newQuantity,
           averagePrice: newAverage,
           buyLimitPrice: null,
         };
-
-        spent += executionPrice;
-        boughtLabels.push(`1 ${current.name} at ${executionPrice} YQ`);
       });
 
       return next;
     });
 
-    if (spent > 0) {
-      setSandboxBalance((previous) => previous - spent);
+    if (plannedSpent > 0) {
+      setSandboxBalance((previous) => previous - plannedSpent);
     }
 
     boughtLabels.forEach((label) => {

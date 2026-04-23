@@ -1,6 +1,7 @@
 import { X, ArrowRight, Sprout, Shield, TrendingDown, Star } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Progress } from "./ui/progress";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 interface LessonModalProps {
   isOpen: boolean;
@@ -241,7 +242,7 @@ export function LessonModal({
   totalSteps,
   hasInvested,
 }: LessonModalProps) {
-  const [activeHelpItem, setActiveHelpItem] = useState<HelpItem | null>(null);
+  const [activeHelpLabel, setActiveHelpLabel] = useState<string | null>(null);
   const unitContent = lessonContent[unitNumber] || lessonContent[1];
   const safeStepIndex = Math.min(Math.max(lessonStep - 1, 0), unitContent.length - 1);
   const content = unitContent[safeStepIndex];
@@ -252,7 +253,7 @@ export function LessonModal({
   );
 
   useEffect(() => {
-    setActiveHelpItem(null);
+    setActiveHelpLabel(null);
   }, [unitNumber, lessonStep, isOpen]);
 
   if (!isOpen || !content) return null;
@@ -306,47 +307,53 @@ export function LessonModal({
           {helpItems.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-2">
               {helpItems.map((item) => (
-                <button
+                <Popover
                   key={item.label}
-                  type="button"
-                  onClick={() => setActiveHelpItem(item)}
-                  className="px-3 py-1.5 rounded-full text-xs transition-colors cursor-pointer"
-                  style={{
-                    backgroundColor: 'var(--light-blue-100)',
-                    border: '1px solid var(--light-blue-300)',
-                    color: 'var(--black-500)',
-                  }}
+                  open={activeHelpLabel === item.label}
+                  onOpenChange={(open) => setActiveHelpLabel(open ? item.label : null)}
                 >
-                  {item.label}
-                </button>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className="px-3 py-1.5 rounded-full text-xs transition-colors cursor-pointer"
+                      style={{
+                        backgroundColor: 'var(--light-blue-100)',
+                        border: '1px solid var(--light-blue-300)',
+                        color: 'var(--black-500)',
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    side="top"
+                    align="center"
+                    sideOffset={8}
+                    className="w-[280px] rounded-xl p-4 shadow-xl z-[80]"
+                    style={{
+                      backgroundColor: 'white',
+                      border: '1px solid var(--light-blue-300)',
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setActiveHelpLabel(null)}
+                      className="absolute right-2 top-2 p-1 rounded-md hover:bg-gray-100 cursor-pointer"
+                    >
+                      <X className="w-4 h-4" style={{ color: 'var(--black-400)' }} />
+                    </button>
+                    <p className="text-sm mb-2 pr-5" style={{ color: 'var(--black-500)' }}>
+                      {item.title}
+                    </p>
+                    <p className="text-xs leading-relaxed" style={{ color: 'var(--black-400)' }}>
+                      {item.body}
+                    </p>
+                  </PopoverContent>
+                </Popover>
               ))}
             </div>
           )}
         </div>
-
-        {activeHelpItem && (
-          <div
-            className="absolute right-6 bottom-24 w-[280px] rounded-xl p-4 shadow-xl"
-            style={{
-              backgroundColor: 'white',
-              border: '1px solid var(--light-blue-300)',
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => setActiveHelpItem(null)}
-              className="absolute right-2 top-2 p-1 rounded-md hover:bg-gray-100 cursor-pointer"
-            >
-              <X className="w-4 h-4" style={{ color: 'var(--black-400)' }} />
-            </button>
-            <p className="text-sm mb-2 pr-5" style={{ color: 'var(--black-500)' }}>
-              {activeHelpItem.title}
-            </p>
-            <p className="text-xs leading-relaxed" style={{ color: 'var(--black-400)' }}>
-              {activeHelpItem.body}
-            </p>
-          </div>
-        )}
 
         {/* Investment status message */}
         {content.requiresInvestAction && hasInvested && (

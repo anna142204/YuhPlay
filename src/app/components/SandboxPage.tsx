@@ -1,4 +1,6 @@
 import { Fragment, useRef, useState } from "react";
+import { ArrowUpRight, ArrowDownRight, Minus, Activity } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 interface SandboxPageProps {
   selectedScenario: "balanced" | "bull" | "bear" | "volatile";
@@ -32,26 +34,30 @@ interface SandboxPageProps {
   }>;
 }
 
-const SCENARIOS: Array<{ id: "balanced" | "bull" | "bear" | "volatile"; label: string; description: string }> = [
+const SCENARIOS: Array<{ id: "balanced" | "bull" | "bear" | "volatile"; label: string; description: string; bestFor: string }> = [
   {
     id: "balanced",
     label: "Balanced",
     description: "Neutral market with moderate random moves.",
+    bestFor: "Best start",
   },
   {
     id: "bull",
     label: "Bull market",
     description: "Upward drift with smoother pullbacks.",
+    bestFor: "Trend trading",
   },
   {
     id: "bear",
     label: "Bear market",
     description: "Downward pressure and tougher recoveries.",
+    bestFor: "Risk control",
   },
   {
     id: "volatile",
     label: "High volatility",
     description: "Fast and larger swings in both directions.",
+    bestFor: "Stress test",
   },
 ];
 
@@ -101,6 +107,29 @@ export function SandboxPage({
   dailyMissionDayKey,
   holdings,
 }: SandboxPageProps) {
+  const InfoHint = ({ label }: { label: string }) => (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          aria-label={label}
+          className="inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-semibold cursor-pointer"
+          style={{ backgroundColor: 'var(--black-100)', color: 'var(--black-500)' }}
+        >
+          i
+        </button>
+      </TooltipTrigger>
+      <TooltipContent
+        side="top"
+        sideOffset={8}
+        className="z-[200] max-w-56 rounded-lg border px-2.5 py-2 text-[11px] leading-snug"
+        style={{ backgroundColor: 'white', color: 'var(--black-500)', borderColor: 'var(--black-100)', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}
+      >
+        {label}
+      </TooltipContent>
+    </Tooltip>
+  );
+
   const settingsRef = useRef<HTMLDetailsElement | null>(null);
   const [limitDrafts, setLimitDrafts] = useState<Record<string, string>>({});
   const [buyLimitDrafts, setBuyLimitDrafts] = useState<Record<string, string>>({});
@@ -187,6 +216,19 @@ export function SandboxPage({
 
   const activeGuide = SCENARIO_GUIDE[selectedScenario];
 
+  const getScenarioIcon = (scenarioId: "balanced" | "bull" | "bear" | "volatile") => {
+    if (scenarioId === "bull") {
+      return <ArrowUpRight className="w-3.5 h-3.5" />;
+    }
+    if (scenarioId === "bear") {
+      return <ArrowDownRight className="w-3.5 h-3.5" />;
+    }
+    if (scenarioId === "volatile") {
+      return <Activity className="w-3.5 h-3.5" />;
+    }
+    return <Minus className="w-3.5 h-3.5" />;
+  };
+
   const handleJumpToScenarioSettings = () => {
     if (!settingsRef.current) {
       return;
@@ -245,11 +287,17 @@ export function SandboxPage({
           </p>
         </div>
         <div className="rounded-xl p-4" style={{ backgroundColor: 'white', border: '1px solid var(--black-100)' }}>
-          <p className="text-xs mb-1" style={{ color: 'var(--black-300)' }}>Diversification score</p>
+          <p className="text-xs mb-1 flex items-center gap-1" style={{ color: 'var(--black-300)' }}>
+            Diversification score
+            <InfoHint label="Measures how spread out your portfolio is across sectors. Higher = less concentration risk." />
+          </p>
           <p className="text-lg font-medium" style={{ color: 'var(--black-500)' }}>{diversificationScore}/100</p>
         </div>
         <div className="rounded-xl p-4" style={{ backgroundColor: 'white', border: '1px solid var(--black-100)' }}>
-          <p className="text-xs mb-1" style={{ color: 'var(--black-300)' }}>Max drawdown</p>
+          <p className="text-xs mb-1 flex items-center gap-1" style={{ color: 'var(--black-300)' }}>
+            Max drawdown
+            <InfoHint label="Largest drop from a previous portfolio peak during this session." />
+          </p>
           <p className="text-lg font-medium" style={{ color: maxDrawdown > 10 ? 'var(--orange-400)' : 'var(--light-blue-400)' }}>
             {maxDrawdown.toFixed(2)}%
           </p>
@@ -464,7 +512,10 @@ export function SandboxPage({
 
                                 <div className="grid gap-2 md:grid-cols-2">
                                   <div>
-                                    <p className="text-xs mb-2" style={{ color: 'var(--black-400)' }}>Auto-sell limit</p>
+                                    <p className="text-xs mb-2 flex items-center gap-1" style={{ color: 'var(--black-400)' }}>
+                                      Auto-sell limit
+                                      <InfoHint label="When live price reaches or goes above this target, the position is sold automatically." />
+                                    </p>
                                     <div className="flex items-center gap-1 overflow-x-auto whitespace-nowrap">
                                       <input
                                         type="number"
@@ -509,7 +560,10 @@ export function SandboxPage({
                                   </div>
 
                                   <div>
-                                    <p className="text-xs mb-2" style={{ color: 'var(--black-400)' }}>Auto-buy limit</p>
+                                    <p className="text-xs mb-2 flex items-center gap-1" style={{ color: 'var(--black-400)' }}>
+                                      Auto-buy limit
+                                      <InfoHint label="When live price reaches or goes below this target, one unit is bought automatically (if cash is available)." />
+                                    </p>
                                     <div className="flex items-center gap-1 overflow-x-auto whitespace-nowrap">
                                       <input
                                         type="number"
@@ -593,21 +647,37 @@ export function SandboxPage({
           Playground settings
         </summary>
         <div className="mt-4">
-          <p className="text-xs mb-3" style={{ color: 'var(--black-400)' }}>SCENARIO</p>
+        <p className="text-xs mb-3" style={{ color: 'var(--black-400)' }}>SCENARIO</p>
           <div className="grid gap-2 md:grid-cols-2 mb-4">
             {SCENARIOS.map((scenario) => (
               <button
                 key={scenario.id}
                 type="button"
                 onClick={() => onScenarioChange(scenario.id)}
-                className="rounded-lg px-3 py-2 text-left text-xs transition-all cursor-pointer"
+                className="rounded-lg px-3 py-2 text-left transition-all cursor-pointer"
                 style={{
                   border: scenario.id === selectedScenario ? '2px solid var(--light-blue-400)' : '1px solid var(--black-100)',
                   backgroundColor: scenario.id === selectedScenario ? 'var(--light-blue-100)' : 'white',
                   color: 'var(--black-500)',
                 }}
               >
-                {scenario.label}
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-xs font-semibold flex items-center gap-1" style={{ color: 'var(--black-500)' }}>
+                      {scenario.label}
+                      {getScenarioIcon(scenario.id)}
+                    </p>
+                    <p className="text-[11px] mt-1" style={{ color: 'var(--black-400)' }}>
+                      {scenario.description}
+                    </p>
+                  </div>
+                  <span
+                    className="text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap"
+                    style={{ backgroundColor: 'var(--orange-50)', color: 'var(--black-500)', border: '1px solid var(--orange-200)' }}
+                  >
+                    {scenario.bestFor}
+                  </span>
+                </div>
               </button>
             ))}
           </div>
