@@ -1,4 +1,4 @@
-export type AssetType = "Stocks" | "Crypto" | "ETF" | "Savings";
+export type AssetType = "Stocks" | "Crypto" | "ETF";
 export type RiskLevel = "Low risk" | "Medium risk" | "High risk";
 
 export interface Asset {
@@ -100,18 +100,6 @@ export const ASSETS: Asset[] = [
     description: "Industrial automation leader with cyclical but strategic demand."
   },
   {
-    id: "credit-suisse",
-    name: "Credit Suisse",
-    tagline: "High-volatility turnaround",
-    category: "Banking",
-    type: "Stocks",
-    sector: "Finance",
-    basePrice: 80,
-    risk: "High risk",
-    icon: "CS",
-    description: "Turnaround profile with elevated volatility and event risk."
-  },
-  {
     id: "btc",
     name: "Bitcoin",
     tagline: "Digital reserve asset",
@@ -122,6 +110,30 @@ export const ASSETS: Asset[] = [
     risk: "High risk",
     icon: "BT",
     description: "Highly volatile asset class, useful for risk awareness training."
+  },
+  {
+    id: "eth",
+    name: "Ethereum",
+    tagline: "Smart-contract ecosystem",
+    category: "Crypto",
+    type: "Crypto",
+    sector: "Digital Assets",
+    basePrice: 420,
+    risk: "High risk",
+    icon: "ET",
+    description: "Volatile crypto asset tied to decentralized application growth."
+  },
+  {
+    id: "sol",
+    name: "Solana",
+    tagline: "High-speed blockchain",
+    category: "Crypto",
+    type: "Crypto",
+    sector: "Digital Assets",
+    basePrice: 260,
+    risk: "High risk",
+    icon: "SL",
+    description: "High-beta digital asset with large upside and downside swings."
   },
   {
     id: "ch-etf",
@@ -136,16 +148,28 @@ export const ASSETS: Asset[] = [
     description: "Tracks a diversified basket of Swiss companies."
   },
   {
-    id: "cash-plus",
-    name: "Cash Plus",
-    tagline: "Low volatility reserve",
-    category: "Savings",
-    type: "Savings",
-    sector: "Cash",
-    basePrice: 100,
-    risk: "Low risk",
-    icon: "SV",
-    description: "Stable pocket for conservative allocation practice."
+    id: "global-etf",
+    name: "Global Equity ETF",
+    tagline: "Worldwide stock exposure",
+    category: "ETF",
+    type: "ETF",
+    sector: "Index",
+    basePrice: 190,
+    risk: "Medium risk",
+    icon: "GE",
+    description: "Broad global equity allocation across regions and sectors."
+  },
+  {
+    id: "tech-etf",
+    name: "Innovation Tech ETF",
+    tagline: "Growth-focused technology basket",
+    category: "ETF",
+    type: "ETF",
+    sector: "Index",
+    basePrice: 230,
+    risk: "Medium risk",
+    icon: "TE",
+    description: "Concentrated technology ETF with stronger growth sensitivity."
   }
 ];
 

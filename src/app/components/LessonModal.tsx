@@ -125,13 +125,13 @@ const lessonContent: Record<number, LessonStep[]> = {
     {
       step: 2,
       title: "Mini Theory: Diversification Done Right",
-      content: "Diversification works best when assets are not all moving the same way.\n\nThink in layers:\n• Sectors (healthcare, finance, luxury, consumer)\n• Risk levels (low/medium/high)\n• Asset types (stocks, ETFs, savings)\n\nGoal: reduce concentration risk, not dilute quality.",
+      content: "Diversification works best when assets are not all moving the same way.\n\nThink in layers:\n• Sectors (healthcare, finance, luxury, consumer)\n• Risk levels (low/medium/high)\n• Asset types (stocks, ETFs, crypto)\n\nGoal: reduce concentration risk, not dilute quality.",
       buttonText: "Understood",
     },
     {
       step: 3,
       title: "Time to diversify your portfolio",
-      content: "You already own one stock. Great start!\n\nNow invest in a DIFFERENT sector:\n• Healthcare (Novartis, Roche)\n• Banking (UBS, Credit Suisse)\n• Luxury (Richemont, Swatch)\n\nThis protects you if one sector struggles.",
+      content: "You already own one stock. Great start!\n\nNow invest in a DIFFERENT sector:\n• Healthcare (Novartis, Roche)\n• Banking (UBS)\n• Luxury (Richemont, Swatch)\n\nThis protects you if one sector struggles.",
       buttonText: "Diversify Now",
       requiresInvestAction: true,
     },
@@ -193,7 +193,7 @@ const lessonContent: Record<number, LessonStep[]> = {
         {
           label: "Asset allocation",
           title: "What is asset allocation?",
-          body: "How you split your portfolio between categories like stocks, ETFs, crypto, and savings."
+          body: "How you split your portfolio between categories like stocks, ETFs, and crypto."
         },
       ],
     },

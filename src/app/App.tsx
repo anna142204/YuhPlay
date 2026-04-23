@@ -287,7 +287,8 @@ export default function App() {
         ASSETS.forEach((asset) => {
           const current = previous[asset.id] ?? asset.basePrice;
           const baseVolatility = asset.risk === "High risk" ? 0.03 : asset.risk === "Medium risk" ? 0.015 : 0.008;
-          const drift = (asset.type === "Savings" ? 0.001 : 0) + scenarioDriftByType[marketScenario];
+
+          const drift = scenarioDriftByType[marketScenario];
           const adjustedVolatility = baseVolatility * scenarioVolatilityMultiplier[marketScenario];
           const move = (Math.random() * 2 - 1) * adjustedVolatility + drift;
           const floor = asset.basePrice * 0.45;
